@@ -1,0 +1,17 @@
+[{
+	"id": "knight",
+	"frames": [0, 18],
+	"health": 10
+},{
+	"id": "rogue",
+	"frames": [1, 19],
+	"health": 20
+},{
+	"id": "archer",
+	"frames": [2, 20],
+	"health": 30
+},{
+	"id": "skeleton",
+	"frames": [290, 308],
+	"health": 5
+}]
