@@ -40,7 +40,7 @@ class Map extends Phaser.GameObjects.Container {
             this.player.on("UNIT_MOVED", this.onUnitMoved, this);
             //this.player.attack = 10;
             this.moveUnit(this.player, tile.gridX, tile.gridY);
-            this.moveUnit(this.player, 0, 0);
+            //this.moveUnit(this.player, 0, 0);
             this.add(this.player);
         }
     }
@@ -90,6 +90,14 @@ class Map extends Phaser.GameObjects.Container {
     }
 
     generateEnemies() {
+        /*
+        Bird: our basic monster with no special behavior
+Snake: moves twice (yes, basically copied from 868-HACK's Virus)
+Tank: moves every other turn
+Eater: destroys walls and heals by doing so
+Jester: moves randomly
+
+*/
         for (let i=0; i<2; i++) {
             let tile = this.pickEmptyTile();
 
@@ -101,15 +109,6 @@ class Map extends Phaser.GameObjects.Container {
 
             this.enemies.push(enemy);
         }
-
-
-        let enemy = new Unit(this.scene, "skeleton", 5);
-        enemy.on("UNIT_MOVED", this.onEnemyAction, this);
-
-        this.moveUnit(enemy, 0, 1);
-        this.add(enemy);
-
-        this.enemies.push(enemy);
     }
 
     generateMap() {
@@ -304,9 +303,31 @@ class Map extends Phaser.GameObjects.Container {
             let action = new Action(this.scene, Action.MOVE);
 
             action.target = this.getTileAt(single_neighboor.x, single_neighboor.y);
-            action.x = (single_neighboor.x * action.getBounds().width) + action.getBounds().width/2;
-            action.y = (single_neighboor.y * action.getBounds().height) + action.getBounds().height/2;
+            action.x = (single_neighboor.x * this.player.getBounds().width) + this.player.getBounds().width/2;
+            action.y = (single_neighboor.y * this.player.getBounds().height) + this.player.getBounds().height/2;
             action.on("ACTION_CLICKED", this.onActionClicked, this);
+
+            action.background.setFrame(0);
+
+            if (single_neighboor.x < this.player.gridX) {
+                action.background.setFrame(4);
+            } else if (single_neighboor.x > this.player.gridX) {
+                action.background.setFrame(2);
+            } else if (single_neighboor.y < this.player.gridY) {
+                action.background.setFrame(1);
+            } else if (single_neighboor.y > this.player.gridY) {
+                action.background.setFrame(3);
+            }
+
+            this.scene.tweens.add({
+                targets: action,
+                scaleX: 0.5,
+                scaleY: 0.5,
+                ease: 'Cubic',
+                duration: 300,
+                yoyo: true,
+                repeat: -1
+            });
 
             this.add(action);
             this.actions.push(action); 
@@ -323,9 +344,19 @@ class Map extends Phaser.GameObjects.Container {
                 let action = new Action(this.scene, Action.ATTACK);
 
                 action.target = single_enemy;
-                action.x = (single_enemy.gridX * action.getBounds().width) + action.getBounds().width/2;
-                action.y = (single_enemy.gridY * action.getBounds().height) + action.getBounds().height/2;
+                action.x = (single_enemy.gridX * this.player.getBounds().width) + this.player.getBounds().width/2;
+                action.y = (single_enemy.gridY * this.player.getBounds().height) + this.player.getBounds().height/2;
                 action.on("ACTION_CLICKED", this.onActionClicked, this);
+
+                this.scene.tweens.add({
+                    targets: action,
+                    scaleX: 0.5,
+                    scaleY: 0.5,
+                    ease: 'Cubic',
+                    duration: 300,
+                    yoyo: true,
+                    repeat: -1
+                });
 
                 this.add(action);
                 this.actions.push(action); 
@@ -353,6 +384,7 @@ class Map extends Phaser.GameObjects.Container {
             let diff = this.getDistanceBetweenUnit(this.player, single_enemy);
 
             if (diff == 1) {
+                this.scene.cameras.main.shake(500);
                 this.attackUnit(single_enemy, this.player, this.waitForAction);
             } else {
                 let pf = new Pathfinding(this.generateMap(), this.config.width, this.config.height);

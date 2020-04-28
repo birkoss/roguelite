@@ -13,11 +13,15 @@ class Action extends Phaser.GameObjects.Container {
     }
 
     create() {
-        this.background = this.scene.add.sprite(0, 0, "tileset:effectsSmall", 3);
+        this.background = this.scene.add.sprite(0, 0, "tileset:actions", 3);
         this.add(this.background);
 
         this.background.setInteractive();
         this.background.on("pointerdown", this.onPointerDown, this);
+
+        if (this.type == Action.ATTACK) {
+            this.background.setFrame(0);
+        }
     }
 
     setType(type) {

@@ -11,6 +11,7 @@ class BootScene extends Phaser.Scene {
         this.load.spritesheet('tileset:world', 'assets/sprites/world.png', { frameWidth: 48, frameHeight: 48 });
         this.load.spritesheet('tileset:units', 'assets/sprites/units.png', { frameWidth: 24, frameHeight: 24 });
         this.load.spritesheet('tileset:items', 'assets/sprites/items.png', { frameWidth: 32, frameHeight: 32 });
+        this.load.spritesheet('tileset:actions', 'assets/sprites/actions.png', { frameWidth: 40, frameHeight: 40 });
 
         this.load.bitmapFont('font:guiOutline', 'assets/fonts/guiOutline.png', 'assets/fonts/guiOutline.xml');
         this.load.bitmapFont('font:gui', 'assets/fonts/gui.png', 'assets/fonts/gui.xml');
