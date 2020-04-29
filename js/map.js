@@ -552,8 +552,21 @@ Jester: moves randomly
                         break;
                     case "QUAKE":
                         // Hit enemies depending on how much walls are around them
-                        this.scene.cameras.main.shake(500);
+                        let duration = 500;
 
+                        // Shake the camera
+                        this.scene.cameras.main.shake(duration);
+
+                        // Wait until the camera stopped shaking to resume the turn
+                        this.scene.time.addEvent({
+                            delay: duration,
+                            callback: function() {
+                                this.nextTurn();
+                            },
+                            callbackScope: this
+                        });
+
+                        // Hit each enemies depending on the walls surrounding them
                         this.enemies.forEach(single_enemy => {
                             if (single_enemy.isAlive()) {
                                 let neighboors = this.getAdjacentTiles(single_enemy.gridX, single_enemy.gridY);
@@ -569,8 +582,6 @@ Jester: moves randomly
                                 }
                             }
                         });
-
-                        this.nextTurn();
                         break;
                     case "MAELSTROM":
                         // Randomly move all enemies
