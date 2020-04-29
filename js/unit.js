@@ -69,8 +69,7 @@ class Unit extends Phaser.GameObjects.Container {
         this.status.y = border.y + 2;
         this.add(this.status);
 
-        console.log(border.displayWidth);
-        console.log(border.displayHeight);
+        this.status.displayWidth = 15;
     }
 
     revive() {
@@ -127,7 +126,7 @@ class Unit extends Phaser.GameObjects.Container {
         }
 
         this.direction = newDirection;
-        this.scaleX = (this.direction == -1 ? 1 : -1);
+        this.background.scaleX = (this.direction == -1 ? 1 : -1) * this.pixelScale;
     }
 
     deactivate() {
