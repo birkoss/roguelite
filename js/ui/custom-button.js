@@ -33,9 +33,9 @@ class CustomButton extends Phaser.GameObjects.Container {
 
     onPointerUp() {
     	if (this.isPressed) {
+            this.onPointerOut();
     		this.emit("BUTTON_CLICKED", this);
     	}
-    	this.onPointerOut();
     }
 
     onPointerDown() {

@@ -96,7 +96,7 @@ class Map extends Phaser.GameObjects.Container {
 
     generateMap(player_health) {
         this.turns = [];
-        console.log("generateMap");
+
         this.generateLevel();
 
         this.generateEnemies();
@@ -123,7 +123,6 @@ class Map extends Phaser.GameObjects.Container {
 
 
     generateTurns() {
-        console.log("generateTurns");
         this.turns.push(this.player);
 
         this.enemies.forEach(single_enemy => {
@@ -134,8 +133,6 @@ class Map extends Phaser.GameObjects.Container {
     }
 
     nextTurn() {
-        console.log("nextTurn...");
-
         if (!this.player.isAlive()) {
             alert("YOU ARE DEAD!!!");
             return;
@@ -664,8 +661,6 @@ Jester: moves randomly
     }
 
     onEnemyAction(unit) {
-        console.log("onEnemyAction");
-
         let completed = true;
         this.enemies.forEach(single_enemy => {
             if (single_enemy.isMoving()) {

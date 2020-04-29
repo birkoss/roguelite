@@ -62,6 +62,7 @@ class MainScene extends Phaser.Scene {
     }
 
     onSpellBtnClicked(btn) {
+        btn.setCountdown();
         this.map.onActionClicked({
             type: Action.SPELL,
             spell: btn.spell
