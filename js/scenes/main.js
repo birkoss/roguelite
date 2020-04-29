@@ -125,10 +125,36 @@ class MainScene extends Phaser.Scene {
             if (unit.type == Unit.PLAYER) {
                 this.map.showActions();
             } else {
-                this.map.tick(unit);
+                this.controlUnit(unit);
             }
         } else {
             this.nextTurn();
+        }
+    }
+
+    controlUnit(single_enemy) {
+        // Can it attack the player ?
+        let diff = this.map.getDistanceBetweenUnit(this.map.player, single_enemy);
+
+        if (diff == 1) {
+            this.cameras.main.shake(500);
+            this.map.attackUnit(single_enemy, this.map.player, this.nextTurn, this);
+        } else {
+            let pf = new Pathfinding(this.map.export(), this.map.config.width, this.map.config.height);
+            let tiles = pf.find({
+                x: single_enemy.gridX,
+                y: single_enemy.gridY
+            }, {
+                x: this.map.player.gridX,
+                y: this.map.player.gridY
+            });
+
+            if (tiles.length > 1) {
+                let neighboor = tiles[0];
+                single_enemy.move(neighboor.x, neighboor.y);
+            } else {
+                this.nextTurn();
+            }
         }
     }
 

@@ -115,7 +115,7 @@ class Map extends Phaser.GameObjects.Container {
         }
     }
 
-    generatePathfindingMap() {
+    export() {
         let map = [];
 
         this.tiles.forEach(single_tile => {
@@ -266,7 +266,7 @@ class Map extends Phaser.GameObjects.Container {
 
 
     /* Initiate an attack from ATTACKER to the DEFENDER and run a callback when it's done */
-    attackUnit(attacker, defender, callback) {
+    attackUnit(attacker, defender, callback, scope) {
         // Save the original position (to get back there after the attack)
         let attacker_original_position = {
             x: attacker.x,
@@ -301,7 +301,7 @@ class Map extends Phaser.GameObjects.Container {
                         y: attacker_original_position.y,
                         ease: 'Cubic',
                         duration: 150,
-                        onCompleteScope: this,
+                        onCompleteScope: scope,
                         onComplete: callback
                     });
                 }, this);
@@ -400,7 +400,7 @@ class Map extends Phaser.GameObjects.Container {
 
         if (diff == 1) {
             this.scene.cameras.main.shake(500);
-            this.attackUnit(single_enemy, this.player, this.nextTurn);
+            this.attackUnit(single_enemy, this.player, this.nextTurn, this);
         } else {
             let pf = new Pathfinding(this.generatePathfindingMap(), this.config.width, this.config.height);
             let tiles = pf.find({x: single_enemy.gridX, y: single_enemy.gridY}, {x: this.player.gridX, y: this.player.gridY});
@@ -436,7 +436,7 @@ class Map extends Phaser.GameObjects.Container {
                 this.player.move(action.target.gridX, action.target.gridY);
                 break;
             case Action.ATTACK:
-                this.attackUnit(this.player, action.target, this.nextTurn);
+                this.attackUnit(this.player, action.target, this.nextTurn, this);
                 break;
             case Action.SPELL:
                 switch (action.spell) {
