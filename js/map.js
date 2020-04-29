@@ -33,8 +33,6 @@ class Map extends Phaser.GameObjects.Container {
         }
 
         this.generateMap(10);
-
-        this.nextTurn();
     }
 
     generateMap(player_health) {
@@ -90,7 +88,7 @@ class Map extends Phaser.GameObjects.Container {
             this.bringToTop(unit);
 
             if (unit.type == Unit.PLAYER) {
-                this.waitForAction();
+                this.showActions();
             } else {
                 this.tick(unit);
             }
@@ -355,7 +353,7 @@ Jester: moves randomly
         return tiles[ Phaser.Math.Between(0, tiles.length-1) ];
     }
 
-    waitForAction() {
+    showActions() {
         // Enable move actions
         let neighboors = this.getAdjacentTiles(this.player.gridX, this.player.gridY);
         neighboors.forEach(single_neighboor => {
@@ -369,8 +367,6 @@ Jester: moves randomly
             action.x = (single_neighboor.x * this.player.getBounds().width) + this.player.getBounds().width/2;
             action.y = (single_neighboor.y * this.player.getBounds().height) + this.player.getBounds().height/2;
             action.on("ACTION_CLICKED", this.onActionClicked, this);
-
-            action.background.setFrame(0);
 
             if (single_neighboor.x < this.player.gridX) {
                 action.background.setFrame(4);

@@ -28,7 +28,7 @@ class MainScene extends Phaser.Scene {
             btn.on("BUTTON_CLICKED", this.onSpellBtnClicked, this);
             btn.x = x;
             btn.y = 600;
-            btn.spell = "WARP";
+            btn.spell = single_spell;
             this.add.existing(btn);
             this.buttons.push(btn);
 
@@ -91,7 +91,11 @@ class MainScene extends Phaser.Scene {
             yoyo: true,
             repeat: 1
         });
+
+        this.map.nextTurn();
     }
+
+    /* Events */
 
     onSpellBtnClicked(btn) {
         btn.setCountdown();
