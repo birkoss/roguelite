@@ -62,39 +62,8 @@ class Map extends Phaser.GameObjects.Container {
         }
     }
 
-    generateTurns() {
-        this.turns.push(this.player);
-
-        this.enemies.forEach(single_enemy => {
-            if (single_enemy.isAlive()) {
-                this.turns.push(single_enemy);
-            }
-        });
-    }
-
     nextTurn() {
-        if (!this.player.isAlive()) {
-            alert("YOU ARE DEAD!!!");
-            return;
-        }
-
-        /* The Turns are empty, fill it again with the remaining units */
-        if (this.turns.length == 0) {
-            this.generateTurns();
-        }
-
-        let unit = this.turns.shift();
-        if (unit.isAlive()) {
-            this.bringToTop(unit);
-
-            if (unit.type == Unit.PLAYER) {
-                this.showActions();
-            } else {
-                this.tick(unit);
-            }
-        } else {
-            this.nextTurn();
-        }
+        this.emit("END_TURN");
     }
 
     generateLevel() {

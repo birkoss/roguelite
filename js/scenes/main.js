@@ -13,6 +13,7 @@ class MainScene extends Phaser.Scene {
         this.map = new Map(this, 7, 10);
         this.map.on("PLAYER_TURN_START", this.onMapPlayerTurnStarted, this);
         this.map.on("PLAYER_TURN_END", this.onMapPlayerTurnEnded, this);
+        this.map.on("END_TURN", this.nextTurn, this);
 
         this.map.x = (this.game.config.width - this.map.getBounds().width) / 2;
         this.map.y = this.map.x;
@@ -92,7 +93,43 @@ class MainScene extends Phaser.Scene {
             repeat: 1
         });
 
-        this.map.nextTurn();
+        this.turns = [];
+        this.nextTurn();
+    }
+
+    generateTurns() {
+        this.turns.push(this.map.player);
+
+        this.map.enemies.forEach(single_enemy => {
+            if (single_enemy.isAlive()) {
+                this.turns.push(single_enemy);
+            }
+        });
+    }
+
+    nextTurn() {
+        if (!this.map.player.isAlive()) {
+            alert("YOU ARE DEAD!!!");
+            return;
+        }
+
+        /* The Turns are empty, fill it again with the remaining units */
+        if (this.turns.length == 0) {
+            this.generateTurns();
+        }
+
+        let unit = this.turns.shift();
+        if (unit.isAlive()) {
+            this.map.bringToTop(unit);
+
+            if (unit.type == Unit.PLAYER) {
+                this.map.showActions();
+            } else {
+                this.map.tick(unit);
+            }
+        } else {
+            this.nextTurn();
+        }
     }
 
     /* Events */
