@@ -2,6 +2,7 @@ class Action extends Phaser.GameObjects.Container {
 
     static MOVE = 1;
     static ATTACK = 2;
+    static SPELL = 3;
 
     constructor(scene, type) {
         super(scene, 0, 0);
@@ -21,19 +22,6 @@ class Action extends Phaser.GameObjects.Container {
 
         if (this.type == Action.ATTACK) {
             this.background.setFrame(0);
-        }
-    }
-
-    setType(type) {
-        this.type = type;
-        
-        switch (type) {
-            case Tile.WALL:
-                this.background.setFrame(0);
-                break;
-            case Tile.FLOOR:
-                this.background.setFrame(3);
-                break;
         }
     }
 

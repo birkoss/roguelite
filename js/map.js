@@ -29,6 +29,29 @@ class Map extends Phaser.GameObjects.Container {
             repeat: 2
         });
 
+        this.scene.anims.create({
+            key: "warp",
+            frames: [{
+                frame: 5,
+                key: "tileset:effectsSmall"
+            },{
+                frame: 6,
+                key: "tileset:effectsSmall"
+            },{
+                frame: 7,
+                key: "tileset:effectsSmall"
+            },{
+                frame: 8,
+                key: "tileset:effectsSmall"
+            },{
+                frame: 9,
+                key: "tileset:effectsSmall"
+            }],
+            frameRate: 20,
+            yoyo: true,
+            repeat: 1
+        });
+
         this.enemies = [];
         this.actions = [];
 
@@ -438,6 +461,38 @@ Jester: moves randomly
                 break;
             case Action.ATTACK:
                 this.attackUnit(this.player, action.target, this.nextTurn);
+                break;
+            case Action.SPELL:
+                switch (action.spell) {
+                    case "WARP":
+
+                        let effect = this.scene.add.sprite(this.player.x + (this.player.width * this.player.scaleX) / 2, this.player.y + (this.player.height * this.player.scaleY) / 2, "tileset:effectsSmall");
+                        this.add(effect);
+
+                        effect.on("animationcomplete", function(tween, sprite, element) {
+                            element.destroy();
+
+                            let tile = this.pickEmptyTile();
+
+                            let effect = this.scene.add.sprite(tile.x, tile.y, "tileset:effectsSmall");
+                            effect.x += (effect.width/2);
+                            effect.y += (effect.height/2);
+                            this.add(effect);
+                            effect.on("animationcomplete", function(tween, sprite, element) {
+                                element.destroy();
+
+                                this.moveUnit(this.player, tile.gridX, tile.gridY);
+
+                                this.nextTurn();
+
+                            }, this);
+                            effect.anims.play("warp", true);
+
+                        }, this);
+
+                        effect.anims.play("warp", true);
+                        break;
+                }
                 break;
         }
     }

@@ -15,6 +15,16 @@ class MainScene extends Phaser.Scene {
         this.map.x = (this.game.config.width - this.map.getBounds().width) / 2;
         this.map.y = this.map.x;
 
-        this.map.waitForAction();
+        this.button = this.add.sprite(200, 600, "tileset:world", 200);
+
+        this.button.setInteractive();
+        this.button.on("pointerdown", this.onButtonDown, this);
+    }
+
+    onButtonDown() {
+        this.map.onActionClicked({
+            type: Action.SPELL,
+            spell: "WARP"
+        });
     }
 };
