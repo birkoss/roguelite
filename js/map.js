@@ -12,63 +12,6 @@ class Map extends Phaser.GameObjects.Container {
     }
 
     create() {
-        this.scene.anims.create({
-            key: "attack",
-            frames: [{
-                frame: 10,
-                key: "tileset:effectsLarge"
-            },{
-                frame: 11,
-                key: "tileset:effectsLarge"
-            }],
-            frameRate: 30,
-            yoyo: true,
-            repeat: 2
-        });
-
-        this.scene.anims.create({
-            key: "heal",
-            frames: [{
-                frame: 26,
-                key: "tileset:effectsSmall"
-            },{
-                frame: 27,
-                key: "tileset:effectsSmall"
-            },{
-                frame: 28,
-                key: "tileset:effectsSmall"
-            },{
-                frame: 29,
-                key: "tileset:effectsSmall"
-            }],
-            frameRate: 20,
-            yoyo: true,
-            repeat: 1
-        });
-
-        this.scene.anims.create({
-            key: "warp",
-            frames: [{
-                frame: 5,
-                key: "tileset:effectsSmall"
-            },{
-                frame: 6,
-                key: "tileset:effectsSmall"
-            },{
-                frame: 7,
-                key: "tileset:effectsSmall"
-            },{
-                frame: 8,
-                key: "tileset:effectsSmall"
-            },{
-                frame: 9,
-                key: "tileset:effectsSmall"
-            }],
-            frameRate: 20,
-            yoyo: true,
-            repeat: 1
-        });
-
         this.enemies = [];
         this.actions = [];
 
@@ -115,12 +58,11 @@ class Map extends Phaser.GameObjects.Container {
             this.player.type = Unit.PLAYER;
             this.player.on("UNIT_MOVED", this.onUnitMoved, this);
             //this.player.attack = 10;
-            this.moveUnit(this.player, tile.gridX, tile.gridY);
-            //this.moveUnit(this.player, 0, 0);
+            this.placeUnit(this.player, tile.gridX, tile.gridY);
+            //this.placeUnit(this.player, 0, 0);
             this.add(this.player);
         }
     }
-
 
     generateTurns() {
         this.turns.push(this.player);
@@ -203,7 +145,7 @@ Jester: moves randomly
             let enemy = new Unit(this.scene, "skeleton", 5);
             enemy.on("UNIT_MOVED", this.onEnemyAction, this);
 
-            this.moveUnit(enemy, tile.gridX, tile.gridY);
+            this.placeUnit(enemy, tile.gridX, tile.gridY);
             this.add(enemy);
 
             this.enemies.push(enemy);
@@ -336,18 +278,22 @@ Jester: moves randomly
         return true;
     }
 
+    /* Initiate an attack from ATTACKER to the DEFENDER and run a callback when it's done */
     attackUnit(attacker, defender, callback) {
-        let attacker_position = {
+        // Save the original position (to get back there after the attack)
+        let attacker_original_position = {
             x: attacker.x,
             y: attacker.y
         };
 
+        // Face the right direction before attacking
         if (attacker.gridX < defender.gridX) {
             attacker.face(1);
         } else if (attacker.gridX > defender.gridX) {
             attacker.face(-1);
         }
 
+        // Move to the defender's position
         this.scene.tweens.add({
             targets: attacker,
             x: defender.x,
@@ -355,34 +301,31 @@ Jester: moves randomly
             ease: 'Cubic',
             duration: 150,
             onComplete: function() {
-
+                // Start the ATTACK animation
                 let effect = this.scene.add.sprite(defender.x + (defender.width * defender.scaleX) / 2, defender.y + (defender.height * defender.scaleY) / 2, "tileset:effectsLarge");
                 this.add(effect);
-
                 effect.on("animationcomplete", function(tween, sprite, element) {
                     element.destroy();
-
                     defender.damage(attacker.attack);
-
+                    // Move the attacker's back to its orignal position
                     this.scene.tweens.add({
                         targets: attacker,
-                        x: attacker_position.x,
-                        y: attacker_position.y,
+                        x: attacker_original_position.x,
+                        y: attacker_original_position.y,
                         ease: 'Cubic',
                         duration: 150,
                         onCompleteScope: this,
                         onComplete: callback
                     });
-
                 }, this);
-
                 effect.anims.play("attack", true);
             },
             onCompleteScope: this
         });
     }
 
-    moveUnit(unit, gridX, gridY) {
+    /* Change the position of an unit (without animation) */
+    placeUnit(unit, gridX, gridY) {
         unit.gridX = gridX;
         unit.gridY = gridY;
 
@@ -551,7 +494,7 @@ Jester: moves randomly
                             effect.on("animationcomplete", function(tween, sprite, element) {
                                 element.destroy();
 
-                                this.moveUnit(this.player, tile.gridX, tile.gridY);
+                                this.placeUnit(this.player, tile.gridX, tile.gridY);
 
                                 this.nextTurn();
 
@@ -614,7 +557,7 @@ Jester: moves randomly
                                 effect.on("animationcomplete", function(tween, sprite, element) {
                                     element.destroy();
 
-                                    this.moveUnit(single_enemy, tile.gridX, tile.gridY);
+                                    this.placeUnit(single_enemy, tile.gridX, tile.gridY);
 
                                     single_enemy.is_moving = false;
                                     let remaining_animations = this.enemies.filter(single_enemy => single_enemy.is_moving);
@@ -695,5 +638,4 @@ Jester: moves randomly
             this.nextTurn();
         }
     }
-
 };

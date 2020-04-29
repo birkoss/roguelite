@@ -17,7 +17,6 @@ class MainScene extends Phaser.Scene {
         this.map.x = (this.game.config.width - this.map.getBounds().width) / 2;
         this.map.y = this.map.x;
 
-
         this.buttons = [];
 
         this.spells = ['WARP','QUAKE','MAELSTROM','MULLIGAN'];
@@ -34,6 +33,63 @@ class MainScene extends Phaser.Scene {
             this.buttons.push(btn);
 
             x += btn.getBounds().width + 40;
+        });
+
+        this.anims.create({
+            key: "attack",
+            frames: [{
+                frame: 10,
+                key: "tileset:effectsLarge"
+            },{
+                frame: 11,
+                key: "tileset:effectsLarge"
+            }],
+            frameRate: 30,
+            yoyo: true,
+            repeat: 2
+        });
+
+        this.anims.create({
+            key: "heal",
+            frames: [{
+                frame: 26,
+                key: "tileset:effectsSmall"
+            },{
+                frame: 27,
+                key: "tileset:effectsSmall"
+            },{
+                frame: 28,
+                key: "tileset:effectsSmall"
+            },{
+                frame: 29,
+                key: "tileset:effectsSmall"
+            }],
+            frameRate: 20,
+            yoyo: true,
+            repeat: 1
+        });
+
+        this.anims.create({
+            key: "warp",
+            frames: [{
+                frame: 5,
+                key: "tileset:effectsSmall"
+            },{
+                frame: 6,
+                key: "tileset:effectsSmall"
+            },{
+                frame: 7,
+                key: "tileset:effectsSmall"
+            },{
+                frame: 8,
+                key: "tileset:effectsSmall"
+            },{
+                frame: 9,
+                key: "tileset:effectsSmall"
+            }],
+            frameRate: 20,
+            yoyo: true,
+            repeat: 1
         });
     }
 
