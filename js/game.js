@@ -5,10 +5,17 @@ var config = {
     height: window.innerHeight,
     pixelArt: true,
     roundPixels: true,
+    antialias: false,
     scene: [
         BootScene,
         MainScene,
-    ]
+    ],
+    render: {
+        pixelArt: true,
+        roundPixels: true,
+        antialias: false,
+        antialiasGL: false
+    }
 };
 
 var game = new Phaser.Game(config);

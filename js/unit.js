@@ -1,8 +1,5 @@
 class Unit extends Phaser.GameObjects.Container {
 
-    static PLAYER = 1;
-    static ENEMY = 2;
-
     constructor(scene, unitId, health) {
         super(scene, 0, 0);
         scene.add.existing(this);
@@ -39,6 +36,41 @@ class Unit extends Phaser.GameObjects.Container {
         this.direction = -1;
 
         this.is_moving = false;
+
+        this.createBar();
+
+    }
+
+    createBar() {
+        let border = this.scene.add.sprite(0, 0, "blank");
+        border.setOrigin(0);
+        border.setTint(0x000000);
+        border.displayWidth = 34;
+        border.displayHeight = 8;
+        border.x -= parseInt(border.displayWidth/2);
+        border.y = this.background.height - border.displayHeight;
+        this.add(border);
+
+        let background = this.scene.add.sprite(0, 0, "blank");
+        background.setOrigin(0);
+        background.setTint(0xff0000);
+        background.displayWidth = 30;
+        background.displayHeight = 4;
+        background.x = border.x + 2;
+        background.y = border.y + 2;
+        this.add(background);
+
+        this.status = this.scene.add.sprite(0, 0, "blank");
+        this.status.setOrigin(0);
+        this.status.setTint(0x00ff00);
+        this.status.displayWidth = 30;
+        this.status.displayHeight = 4;
+        this.status.x = border.x + 2;
+        this.status.y = border.y + 2;
+        this.add(this.status);
+
+        console.log(border.displayWidth);
+        console.log(border.displayHeight);
     }
 
     revive() {
@@ -48,6 +80,8 @@ class Unit extends Phaser.GameObjects.Container {
 
     damage(amount) {
         this.health = Math.max(0, this.health - amount);
+
+        this.status.displayWidth = (30 * this.health / this.maxHealth);
         if (!this.isAlive()) {
             this.background.setTexture("tileset:effectsSmall");
             this.background.setScale(1);
@@ -113,3 +147,7 @@ class Unit extends Phaser.GameObjects.Container {
         this.emit("UNIT_MOVED", this);
     }
 };
+
+
+Unit.PLAYER = 1;
+Unit.ENEMY = 2;

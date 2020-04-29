@@ -8,6 +8,18 @@
     <script src="js/vendor/phaser.min.js"></script>
     <style>
         body { margin:0; padding:0; }
+ html,
+        body {
+          margin: 0;
+          padding: 0;
+          image-rendering: optimizeSpeed;              /* Older versions of FF */
+          image-rendering: -moz-crisp-edges;           /* FF 6.0+ */
+          image-rendering: -webkit-optimize-contrast;  /* Webkit (non standard naming) */
+          image-rendering: -o-crisp-edges;             /* OS X & Windows Opera (12.02+) */
+          image-rendering: crisp-edges;                /* Possible future browsers. */
+          -ms-interpolation-mode: nearest-neighbor;    /* IE (non standard naming) */
+          image-rendering: pixelated;                  /* Chrome 41 */
+        }
     </style>
 </head>
 <body>
@@ -17,8 +29,8 @@
     <script src="js/scenes/main.js"></script>
     
     <script src="js/unit.js"></script>
-    <script src="js/map.js"></script>
     <script src="js/tile.js"></script>
+    <script src="js/map.js"></script>
     <script src="js/action.js"></script>
     
     <script src="js/ui/custom-button.js"></script>

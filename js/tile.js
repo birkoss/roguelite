@@ -1,7 +1,5 @@
 class Tile extends Phaser.GameObjects.Container {
 
-    static WALL = 1;
-
     constructor(scene) {
         super(scene, 0, 0);
         scene.add.existing(this);
@@ -28,3 +26,5 @@ class Tile extends Phaser.GameObjects.Container {
         }
     }
 };
+
+Tile.WALL = 1;

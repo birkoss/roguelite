@@ -1,9 +1,5 @@
 class Action extends Phaser.GameObjects.Container {
 
-    static MOVE = 1;
-    static ATTACK = 2;
-    static SPELL = 3;
-
     constructor(scene, type) {
         super(scene, 0, 0);
         scene.add.existing(this);
@@ -29,3 +25,7 @@ class Action extends Phaser.GameObjects.Container {
         this.emit("ACTION_CLICKED", this);
     }
 };
+
+Action.MOVE = 1;
+Action.ATTACK = 2;
+Action.SPELL = 3;

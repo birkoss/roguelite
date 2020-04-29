@@ -8,7 +8,6 @@ class Map extends Phaser.GameObjects.Container {
             'width': width,
             'height': height
         };
-
         this.create();
     }
 
@@ -92,13 +91,16 @@ class Map extends Phaser.GameObjects.Container {
         }
 
         let unit = this.turns.shift();
+        if (unit.isAlive()) {
+            this.bringToTop(unit);
 
-        this.bringToTop(unit);
-
-        if (unit.type == Unit.PLAYER) {
-            this.waitForAction();
+            if (unit.type == Unit.PLAYER) {
+                this.waitForAction();
+            } else {
+                this.tick(unit);
+            }
         } else {
-            this.tick(unit);
+            this.nextTurn();
         }
     }
 
@@ -108,8 +110,15 @@ class Map extends Phaser.GameObjects.Container {
         /* Generate all tiles */
         for (let y=0; y<this.config.height; y++) {
             for (let x=0; x<this.config.width; x++) {
-                let tile = new Tile(this.scene);
 
+                let tile;
+                try {
+
+                    tile = new Tile(this.scene);
+                } catch(err) {
+                    alert("Err:");
+                    alert(err);
+                }
                 tile.gridX = x;
                 tile.gridY = y;
 
