@@ -86,6 +86,13 @@ class Map extends Phaser.GameObjects.Container {
 
     nextTurn() {
         console.log("nextTurn...");
+
+        if (!this.player.isAlive()) {
+            alert("YOU ARE DEAD!!!");
+            return;
+        }
+
+        /* The Turns are empty, fill it again with the remaining units */
         if (this.turns.length == 0) {
             this.generateTurns();
         }
@@ -268,13 +275,25 @@ Jester: moves randomly
         return x >= 0 && x < this.config.width && y >= 0 && y < this.config.height && this.tiles[index] != undefined;
     }
 
-    isEmptyAt(x, y) {
+    isFloorAt(x, y) {
         if (!this.isValidTile(x, y)) {
             return false;
         }
 
         let tile = this.getTileAt(x, y);
         if (tile.type != Tile.FLOOR) {
+            return false;
+        }
+
+        return true;
+    }
+
+    isEmptyAt(x, y) {
+        if (!this.isValidTile(x, y)) {
+            return false;
+        }
+
+        if (!this.isFloorAt(x, y)) {
             return false;
         }
 
@@ -425,6 +444,8 @@ Jester: moves randomly
                 this.actions.push(action); 
             }
         });
+
+        this.emit("PLAYER_TURN_START", this);
     }
 
     getDistanceBetweenUnit(unit1, unit2) {
@@ -460,6 +481,8 @@ Jester: moves randomly
     }
 
     onActionClicked(action) {
+        this.emit("PLAYER_TURN_END", this);
+
         this.actions.forEach(single_action => {
             single_action.destroy();
         });
@@ -500,6 +523,27 @@ Jester: moves randomly
                         }, this);
 
                         effect.anims.play("warp", true);
+                        break;
+                    case "QUAKE":
+                        this.scene.cameras.main.shake(500);
+
+                        this.enemies.forEach(single_enemy => {
+                            if (single_enemy.isAlive()) {
+                                let neighboors = this.getAdjacentTiles(single_enemy.gridX, single_enemy.gridY);
+                                let damage = 4;
+                                neighboors.forEach(single_neighboor => {
+                                    if (this.isFloorAt(single_neighboor.x, single_neighboor.y)) {
+                                        damage--;
+                                    }
+                                });
+
+                                if (damage > 0) {
+                                    single_enemy.damage(damage);
+                                }
+                            }
+                        });
+
+                        this.nextTurn();
                         break;
                 }
                 break;

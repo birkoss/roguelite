@@ -42,6 +42,7 @@ class Unit extends Phaser.GameObjects.Container {
     }
 
     createBar() {
+        this.healthBar = [];
         let border = this.scene.add.sprite(0, 0, "blank");
         border.setOrigin(0);
         border.setTint(0x000000);
@@ -50,6 +51,7 @@ class Unit extends Phaser.GameObjects.Container {
         border.x -= parseInt(border.displayWidth/2);
         border.y = this.background.height - border.displayHeight;
         this.add(border);
+        this.healthBar.push(border);
 
         let background = this.scene.add.sprite(0, 0, "blank");
         background.setOrigin(0);
@@ -59,6 +61,7 @@ class Unit extends Phaser.GameObjects.Container {
         background.x = border.x + 2;
         background.y = border.y + 2;
         this.add(background);
+        this.healthBar.push(background);
 
         this.status = this.scene.add.sprite(0, 0, "blank");
         this.status.setOrigin(0);
@@ -68,6 +71,7 @@ class Unit extends Phaser.GameObjects.Container {
         this.status.x = border.x + 2;
         this.status.y = border.y + 2;
         this.add(this.status);
+        this.healthBar.push(this.status);
 
         this.status.displayWidth = 15;
     }
@@ -82,6 +86,9 @@ class Unit extends Phaser.GameObjects.Container {
 
         this.status.displayWidth = (30 * this.health / this.maxHealth);
         if (!this.isAlive()) {
+            this.healthBar.forEach(single_element => {
+                single_element.destroy();
+            });
             this.background.setTexture("tileset:effectsSmall");
             this.background.setScale(1);
             this.background.setFrame(98);
