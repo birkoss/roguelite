@@ -391,8 +391,20 @@ Jester: moves randomly
     }
 
     getEmptyTiles() {
-        // @TODO
-        return this.tiles.filter(single_tile => single_tile.type == Tile.FLOOR);
+        return this.tiles.filter(single_tile => {
+            if (single_tile.type != Tile.FLOOR) {
+                return false;
+            }
+
+            let is_empty = true;
+            this.enemies.forEach(single_enemy => {
+                if (single_enemy.gridX == single_tile.gridX && single_enemy.gridY == single_tile.gridY) {
+                    is_empty = false;
+                }
+            });
+
+            return is_empty;
+        });
     }
 
     pickEmptyTile() {
