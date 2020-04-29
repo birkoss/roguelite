@@ -35,35 +35,31 @@ class Map extends Phaser.GameObjects.Container {
         this.generateMap(10);
     }
 
-    generateMap(player_health) {
-        this.turns = [];
+    generateEnemies() {
+        this.enemies.forEach(single_enemy => {
+            single_enemy.destroy();
+        });
+        this.enemies = [];
 
-        this.generateLevel();
+        /*
+        Bird: our basic monster with no special behavior
+        Snake: moves twice (yes, basically copied from 868-HACK's Virus)
+        Tank: moves every other turn
+        Eater: destroys walls and heals by doing so
+        Jester: moves randomly
 
-        this.generateEnemies();
+        */
+        for (let i=0; i<2; i++) {
+            let tile = this.pickEmptyTile();
 
-        if (this.player != undefined) {
-            this.player.destroy();
+            let enemy = new Unit(this.scene, "skeleton", 5);
+            enemy.on("UNIT_MOVED", this.onEnemyAction, this);
+
+            this.placeUnit(enemy, tile.gridX, tile.gridY);
+            this.add(enemy);
+
+            this.enemies.push(enemy);
         }
-
-        let tile = this.pickEmptyTile();
-        if (tile) {
-            this.player = new Unit(this.scene, "knight", 10);
-            if (player_health < this.player.health) {
-                this.player.health = player_health;
-                this.player.updateBar();
-            }
-            this.player.type = Unit.PLAYER;
-            this.player.on("UNIT_MOVED", this.onUnitMoved, this);
-            //this.player.attack = 10;
-            this.placeUnit(this.player, tile.gridX, tile.gridY);
-            //this.placeUnit(this.player, 0, 0);
-            this.add(this.player);
-        }
-    }
-
-    nextTurn() {
-        this.emit("END_TURN");
     }
 
     generateLevel() {
@@ -92,30 +88,30 @@ class Map extends Phaser.GameObjects.Container {
         } while (generatingMap);
     }
 
-    generateEnemies() {
-        this.enemies.forEach(single_enemy => {
-            single_enemy.destroy();
-        });
-        this.enemies = [];
+    generateMap(player_health) {
+        this.turns = [];
 
-        /*
-        Bird: our basic monster with no special behavior
-Snake: moves twice (yes, basically copied from 868-HACK's Virus)
-Tank: moves every other turn
-Eater: destroys walls and heals by doing so
-Jester: moves randomly
+        this.generateLevel();
 
-*/
-        for (let i=0; i<2; i++) {
-            let tile = this.pickEmptyTile();
+        this.generateEnemies();
 
-            let enemy = new Unit(this.scene, "skeleton", 5);
-            enemy.on("UNIT_MOVED", this.onEnemyAction, this);
+        if (this.player != undefined) {
+            this.player.destroy();
+        }
 
-            this.placeUnit(enemy, tile.gridX, tile.gridY);
-            this.add(enemy);
-
-            this.enemies.push(enemy);
+        let tile = this.pickEmptyTile();
+        if (tile) {
+            this.player = new Unit(this.scene, "knight", 10);
+            if (player_health < this.player.health) {
+                this.player.health = player_health;
+                this.player.updateBar();
+            }
+            this.player.type = Unit.PLAYER;
+            this.player.on("UNIT_MOVED", this.onUnitMoved, this);
+            //this.player.attack = 10;
+            this.placeUnit(this.player, tile.gridX, tile.gridY);
+            //this.placeUnit(this.player, 0, 0);
+            this.add(this.player);
         }
     }
 
@@ -137,24 +133,9 @@ Jester: moves randomly
         return map;
     }
 
-    getConnectedTiles(x, y) {
-        if (!this.isValidTile(x, y) || !this.isEmptyAt(x, y)) {
-            return [];
-        }
-
-        return this.floodFill(x, y, this.getTileAt(x, y).type);
-    }
-
-    getTileAt(x, y) {
-        if (!this.isValidTile(x, y)) {
-            return null;
-        }
-        return this.tiles[ (y * this.config.width) + x];
-    }
-
+    /* Get all the adjacent tiles of (x, y) */
     getAdjacentTiles(x, y) {
         let tiles = [];
-
         for (let y2=-1; y2<=1; y2++) {
             for (let x2=-1; x2<=1; x2++) {
                 if (Math.abs(x2) != Math.abs(y2)) {
@@ -165,8 +146,36 @@ Jester: moves randomly
                 }
             }
         }
-
         return tiles;
+    }
+
+    /* Get all the connected tile from the tile at (x, y) */
+    getConnectedTiles(x, y) {
+        if (!this.isValidTile(x, y) || !this.isEmptyAt(x, y)) {
+            return [];
+        }
+        return this.floodFill(x, y, this.getTileAt(x, y).type);
+    }
+
+    /* Calculate the distance between 2 units */
+    getDistanceBetweenUnit(unit1, unit2) {
+        let diff = Math.abs(unit1.gridX - unit2.gridX) + Math.abs(unit1.gridY - unit2.gridY);
+        return diff;
+    }
+
+    /* Get all empty tiles (Not walls and without enemies) */
+    getEmptyTiles() {
+        return this.tiles.filter(single_tile => {
+            return this.isEmptyAt(single_tile.gridX, single_tile.gridY);
+        });
+    }
+
+    /* Get the tile at (x, y) */
+    getTileAt(x, y) {
+        if (!this.isValidTile(x, y)) {
+            return null;
+        }
+        return this.tiles[ (y * this.config.width) + x];
     }
 
     floodFill(x, y, type, tiles) {
@@ -204,25 +213,7 @@ Jester: moves randomly
         return tiles;
     }
 
-    isValidTile(x, y) {
-        let index = (y * this.config.width) + x;
-
-        return x >= 0 && x < this.config.width && y >= 0 && y < this.config.height && this.tiles[index] != undefined;
-    }
-
-    isFloorAt(x, y) {
-        if (!this.isValidTile(x, y)) {
-            return false;
-        }
-
-        let tile = this.getTileAt(x, y);
-        if (tile.type != Tile.FLOOR) {
-            return false;
-        }
-
-        return true;
-    }
-
+    /* Is the tile at (x, y) empty: a floor without enemies */
     isEmptyAt(x, y) {
         if (!this.isValidTile(x, y)) {
             return false;
@@ -244,6 +235,35 @@ Jester: moves randomly
 
         return true;
     }
+
+    /* Is the tile at (x, y) is a floor and not a wall */
+    isFloorAt(x, y) {
+        if (!this.isValidTile(x, y)) {
+            return false;
+        }
+
+        let tile = this.getTileAt(x, y);
+        if (tile.type != Tile.FLOOR) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /* Is the tile at (x, y) is within bounds of the map */
+    isValidTile(x, y) {
+        let index = (y * this.config.width) + x;
+
+        return x >= 0 && x < this.config.width && y >= 0 && y < this.config.height && this.tiles[index] != undefined;
+    }
+
+    /* Pick a random empty tiles (a floor without enemies) */
+    pickEmptyTile() {
+        let tiles = this.getEmptyTiles();
+        return tiles[ Phaser.Math.Between(0, tiles.length-1) ];
+    }
+
+
 
     /* Initiate an attack from ATTACKER to the DEFENDER and run a callback when it's done */
     attackUnit(attacker, defender, callback) {
@@ -298,28 +318,6 @@ Jester: moves randomly
 
         unit.x = (gridX * unit.getBounds().width) + (unit.getBounds().width / 2);
         unit.y = (gridY * unit.getBounds().height) + (unit.getBounds().height / 2);
-    }
-
-    getEmptyTiles() {
-        return this.tiles.filter(single_tile => {
-            if (single_tile.type != Tile.FLOOR) {
-                return false;
-            }
-
-            let is_empty = true;
-            this.enemies.forEach(single_enemy => {
-                if (single_enemy.gridX == single_tile.gridX && single_enemy.gridY == single_tile.gridY) {
-                    is_empty = false;
-                }
-            });
-
-            return is_empty;
-        });
-    }
-
-    pickEmptyTile() {
-        let tiles = this.getEmptyTiles();
-        return tiles[ Phaser.Math.Between(0, tiles.length-1) ];
     }
 
     showActions() {
@@ -394,11 +392,7 @@ Jester: moves randomly
         this.emit("PLAYER_TURN_START", this);
     }
 
-    getDistanceBetweenUnit(unit1, unit2) {
-        let diff = Math.abs(unit1.gridX - unit2.gridX) + Math.abs(unit1.gridY - unit2.gridY);
 
-        return diff;
-    }
 
     tick(single_enemy) {
         // Can it attack the player ?
@@ -418,6 +412,10 @@ Jester: moves randomly
                 this.nextTurn();
             }
         }
+    }
+
+    nextTurn() {
+        this.emit("END_TURN");
     }
 
     /* Events */
