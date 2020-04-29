@@ -9,29 +9,27 @@ class CustomButton extends Phaser.GameObjects.Container {
         this.background.setOrigin(0);
         this.add(this.background);
 
-        this.background.setInteractive();
-        this.background.on("pointerdown", () => this.onPointerDown());
-        this.background.on("pointerup", () => this.onPointerUp());
-        this.background.on("pointerout", () => this.onPointerOut());
+        this.background.on("pointerdown", this.onPointerDown, this);
+        this.background.on("pointerup", this.onPointerUp, this);
+        this.background.on("pointerout", this.onPointerOut, this);
     }
 
     disable() {
         this.isDisabled = true;
         this.alpha = 0.8;
-        //this.label.tint = 0x727685;
     	this.background.disableInteractive();
     }
 
     enable() {
         this.isDisabled = false;
         this.alpha = 1;
-        //this.label.tint = 0x727685;
         this.background.setInteractive();
     }    
 
     /* Events */
 
     onPointerUp() {
+        console.log(this.spell);
     	if (this.isPressed) {
             this.onPointerOut();
     		this.emit("BUTTON_CLICKED", this);
@@ -39,15 +37,18 @@ class CustomButton extends Phaser.GameObjects.Container {
     }
 
     onPointerDown() {
+        console.log(this.spell);
+        if (this.isPressed) {
+            return;
+        }
     	this.isPressed = true;
     	this.background.setFrame(1);
-        //this.label.y = this.label.originalY + 4;
     }
 
     onPointerOut() {
+        console.log(this.spell);
     	this.isPressed = false;
         if (!this.isDisabled) {
-            //this.label.y = this.label.originalY;
             this.background.setFrame(0);
         }
     }

@@ -20,45 +20,21 @@ class MainScene extends Phaser.Scene {
 
         this.buttons = [];
 
-        let btn = new SpellButton(this);
-        btn.on("BUTTON_CLICKED", this.onSpellBtnClicked, this);
-        btn.x = 50;
-        btn.y = 600;
-        btn.spell = "WARP";
-        this.add.existing(btn);
-        this.buttons.push(btn);
+        this.spells = ['WARP','QUAKE','MAELSTROM','MULLIGAN'];
 
-        btn = new SpellButton(this);
-        btn.on("BUTTON_CLICKED", this.onSpellBtnClicked, this);
-        btn.x = 120;
-        btn.y = 600;
-        btn.spell = "QUAKE";
-        this.add.existing(btn);
-        this.buttons.push(btn);
+        let x = 50;
 
-        btn = new SpellButton(this);
-        btn.on("BUTTON_CLICKED", this.onSpellBtnClicked, this);
-        btn.x = 190;
-        btn.y = 600;
-        btn.spell = "MAELSTROM";
-        this.add.existing(btn);
-        this.buttons.push(btn);
+        this.spells.forEach(single_spell => {
+            let btn = new SpellButton(this);
+            btn.on("BUTTON_CLICKED", this.onSpellBtnClicked, this);
+            btn.x = x;
+            btn.y = 600;
+            btn.spell = "WARP";
+            this.add.existing(btn);
+            this.buttons.push(btn);
 
-        btn = new SpellButton(this);
-        btn.on("BUTTON_CLICKED", this.onSpellBtnClicked, this);
-        btn.x = 260;
-        btn.y = 600;
-        btn.spell = "MULLIGAN";
-        this.add.existing(btn);
-        this.buttons.push(btn);
-
-        btn = new SpellButton(this);
-        btn.on("BUTTON_CLICKED", this.onSpellBtnClicked, this);
-        btn.x = 330;
-        btn.y = 600;
-        btn.spell = "AURA";
-        this.add.existing(btn);
-        this.buttons.push(btn);
+            x += btn.getBounds().width + 40;
+        });
     }
 
     onSpellBtnClicked(btn) {
