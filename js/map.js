@@ -13,6 +13,8 @@ class Map extends Phaser.GameObjects.Container {
     }
 
     create() {
+        this.turns = [];
+
         this.scene.anims.create({
             key: "attack",
             frames: [{
@@ -37,11 +39,43 @@ class Map extends Phaser.GameObjects.Container {
         let tile = this.pickEmptyTile();
         if (tile) {
             this.player = new Unit(this.scene, "knight", 10);
+            this.player.type = Unit.PLAYER;
             this.player.on("UNIT_MOVED", this.onUnitMoved, this);
             //this.player.attack = 10;
             this.moveUnit(this.player, tile.gridX, tile.gridY);
             //this.moveUnit(this.player, 0, 0);
             this.add(this.player);
+        }
+
+        this.nextTurn();
+    }
+
+
+    generateTurns() {
+        console.log("generateTurns");
+        this.turns.push(this.player);
+
+        this.enemies.forEach(single_enemy => {
+            if (single_enemy.isAlive()) {
+                this.turns.push(single_enemy);
+            }
+        });
+    }
+
+    nextTurn() {
+        console.log("nextTurn...");
+        if (this.turns.length == 0) {
+            this.generateTurns();
+        }
+
+        let unit = this.turns.shift();
+
+        this.bringToTop(unit);
+
+        if (unit.type == Unit.PLAYER) {
+            this.waitForAction();
+        } else {
+            this.tick(unit);
         }
     }
 
@@ -231,9 +265,6 @@ Jester: moves randomly
             y: attacker.y
         };
 
-        this.bringToTop(attacker);
-
-        console.log(attacker.gridX, defender.gridX);
         if (attacker.gridX < defender.gridX) {
             attacker.face(1);
         } else if (attacker.gridX > defender.gridX) {
@@ -370,43 +401,30 @@ Jester: moves randomly
         return diff;
     }
 
-    tick() {
-        let enemy_alive = false;
+    tick(single_enemy) {
+        // Can it attack the player ?
+        let diff = this.getDistanceBetweenUnit(this.player, single_enemy);
 
-        this.enemies.forEach(single_enemy => {
-            if (!single_enemy.isAlive()) {
-                return;
-            }
+        if (diff == 1) {
+            this.scene.cameras.main.shake(500);
+            this.attackUnit(single_enemy, this.player, this.nextTurn);
+        } else {
+            let pf = new Pathfinding(this.generateMap(), this.config.width, this.config.height);
+            let tiles = pf.find({x: single_enemy.gridX, y: single_enemy.gridY}, {x: this.player.gridX, y: this.player.gridY});
 
-            enemy_alive = true;
-
-            // Can it attack the player ?
-            let diff = this.getDistanceBetweenUnit(this.player, single_enemy);
-
-            if (diff == 1) {
-                this.scene.cameras.main.shake(500);
-                this.attackUnit(single_enemy, this.player, this.waitForAction);
+            if (tiles.length > 1) {
+                let neighboor = tiles[0];
+                single_enemy.move(neighboor.x, neighboor.y);
             } else {
-                let pf = new Pathfinding(this.generateMap(), this.config.width, this.config.height);
-                let tiles = pf.find({x: single_enemy.gridX, y: single_enemy.gridY}, {x: this.player.gridX, y: this.player.gridY});
-
-                if (tiles.length > 1) {
-                    let neighboor = tiles[0];
-                    single_enemy.move(neighboor.x, neighboor.y);
-                }
+                this.nextTurn();
             }
-        });
-
-        /* No enemy left ... */
-        if (!enemy_alive) {
-            this.waitForAction();
         }
     }
 
     /* Events */
 
     onUnitMoved(unit) {
-        this.tick();
+        this.nextTurn();
     }
 
     onActionClicked(action) {
@@ -419,7 +437,7 @@ Jester: moves randomly
                 this.player.move(action.target.gridX, action.target.gridY);
                 break;
             case Action.ATTACK:
-                this.attackUnit(this.player, action.target, this.tick);
+                this.attackUnit(this.player, action.target, this.nextTurn);
                 break;
         }
     }
@@ -435,7 +453,7 @@ Jester: moves randomly
         });
 
         if (completed) {
-            this.waitForAction();
+            this.nextTurn();
         }
     }
 

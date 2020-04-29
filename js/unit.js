@@ -1,5 +1,8 @@
 class Unit extends Phaser.GameObjects.Container {
 
+    static PLAYER = 1;
+    static ENEMY = 2;
+
     constructor(scene, unitId, health) {
         super(scene, 0, 0);
         scene.add.existing(this);
@@ -9,6 +12,8 @@ class Unit extends Phaser.GameObjects.Container {
 
         this.pixelScale = 2;
         this.unitId = unitId;
+
+        this.type = Unit.ENEMY;
 
         this.create();
     }
