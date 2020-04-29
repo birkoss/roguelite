@@ -27,6 +27,26 @@ class Map extends Phaser.GameObjects.Container {
         });
 
         this.scene.anims.create({
+            key: "heal",
+            frames: [{
+                frame: 26,
+                key: "tileset:effectsSmall"
+            },{
+                frame: 27,
+                key: "tileset:effectsSmall"
+            },{
+                frame: 28,
+                key: "tileset:effectsSmall"
+            },{
+                frame: 29,
+                key: "tileset:effectsSmall"
+            }],
+            frameRate: 20,
+            yoyo: true,
+            repeat: 1
+        });
+
+        this.scene.anims.create({
             key: "warp",
             frames: [{
                 frame: 5,
@@ -600,6 +620,43 @@ Jester: moves randomly
                         this.turns.shift();
 
                         this.nextTurn();
+                        break;
+                    case "AURA":
+                        // Heal the player and any adjacent enemies
+                        let neighboors = this.getAdjacentTiles(this.player.gridX, this.player.gridY);
+                        neighboors.forEach(single_neighboor => {
+                            let enemy_around = null;
+
+                            this.enemies.forEach(single_enemy => {
+                                if (single_enemy.gridX == single_neighboor.x && single_enemy.gridY == single_neighboor.y) {
+                                    enemy_around = single_enemy;
+                                }
+                            });
+
+                            if (enemy_around != null) {
+                                let effect2 = this.scene.add.sprite(enemy_around.x + (enemy_around.width * enemy_around.scaleX) / 2, enemy_around.y + (enemy_around.height * enemy_around.scaleY) / 2, "tileset:effectsSmall");
+                                this.add(effect2);
+                                effect2.on("animationcomplete", function(tween, sprite, element) {
+                                    element.destroy();
+
+                                    enemy_around.heal(1);
+                                });
+                                effect2.anims.play("heal", true);
+                            }
+                        });
+
+                        let effect2 = this.scene.add.sprite(this.player.x + (this.player.width * this.player.scaleX) / 2, this.player.y + (this.player.height * this.player.scaleY) / 2, "tileset:effectsSmall");
+                        this.add(effect2);
+
+                        effect2.on("animationcomplete", function(tween, sprite, element) {
+                            element.destroy();
+
+                            this.player.heal(1);
+                            this.nextTurn();
+
+                        }, this);
+
+                        effect2.anims.play("heal", true);
                         break;
                 }
                 break;

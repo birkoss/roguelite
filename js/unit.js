@@ -85,6 +85,12 @@ class Unit extends Phaser.GameObjects.Container {
         this.status.displayWidth = (30 * this.health / this.maxHealth);
     }
 
+    heal(amount) {
+        this.health = Math.min(this.maxHealth, this.health + amount);
+
+        this.updateBar();
+    }
+
     damage(amount) {
         this.health = Math.max(0, this.health - amount);
 

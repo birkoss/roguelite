@@ -51,6 +51,14 @@ class MainScene extends Phaser.Scene {
         btn.spell = "MULLIGAN";
         this.add.existing(btn);
         this.buttons.push(btn);
+
+        btn = new SpellButton(this);
+        btn.on("BUTTON_CLICKED", this.onSpellBtnClicked, this);
+        btn.x = 330;
+        btn.y = 600;
+        btn.spell = "AURA";
+        this.add.existing(btn);
+        this.buttons.push(btn);
     }
 
     onSpellBtnClicked(btn) {
