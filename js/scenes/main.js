@@ -22,7 +22,7 @@ class MainScene extends Phaser.Scene {
 
         let btn = new SpellButton(this);
         btn.on("BUTTON_CLICKED", this.onSpellBtnClicked, this);
-        btn.x = 250;
+        btn.x = 50;
         btn.y = 600;
         btn.spell = "WARP";
         this.add.existing(btn);
@@ -30,9 +30,25 @@ class MainScene extends Phaser.Scene {
 
         btn = new SpellButton(this);
         btn.on("BUTTON_CLICKED", this.onSpellBtnClicked, this);
-        btn.x = 320;
+        btn.x = 120;
         btn.y = 600;
         btn.spell = "QUAKE";
+        this.add.existing(btn);
+        this.buttons.push(btn);
+
+        btn = new SpellButton(this);
+        btn.on("BUTTON_CLICKED", this.onSpellBtnClicked, this);
+        btn.x = 190;
+        btn.y = 600;
+        btn.spell = "MAELSTROM";
+        this.add.existing(btn);
+        this.buttons.push(btn);
+
+        btn = new SpellButton(this);
+        btn.on("BUTTON_CLICKED", this.onSpellBtnClicked, this);
+        btn.x = 260;
+        btn.y = 600;
+        btn.spell = "MULLIGAN";
         this.add.existing(btn);
         this.buttons.push(btn);
     }

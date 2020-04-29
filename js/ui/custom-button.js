@@ -13,7 +13,6 @@ class CustomButton extends Phaser.GameObjects.Container {
         this.background.on("pointerdown", () => this.onPointerDown());
         this.background.on("pointerup", () => this.onPointerUp());
         this.background.on("pointerout", () => this.onPointerOut());
-        console.log("...");
     }
 
     disable() {

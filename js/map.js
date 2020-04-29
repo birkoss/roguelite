@@ -12,8 +12,6 @@ class Map extends Phaser.GameObjects.Container {
     }
 
     create() {
-        this.turns = [];
-
         this.scene.anims.create({
             key: "attack",
             frames: [{
@@ -54,13 +52,46 @@ class Map extends Phaser.GameObjects.Container {
         this.enemies = [];
         this.actions = [];
 
+        /* Generate all tiles */
+        this.tiles = [];
+        for (let y=0; y<this.config.height; y++) {
+            for (let x=0; x<this.config.width; x++) {
+
+                let tile = new Tile(this.scene);
+                tile.gridX = x;
+                tile.gridY = y;
+
+                tile.x = tile.getBounds().width * x;
+                tile.y = tile.getBounds().height * y;
+
+                this.add(tile);
+                this.tiles.push(tile);
+            }
+        }
+
+        this.generateMap(10);
+
+        this.nextTurn();
+    }
+
+    generateMap(player_health) {
+        this.turns = [];
+        console.log("generateMap");
         this.generateLevel();
 
         this.generateEnemies();
 
+        if (this.player != undefined) {
+            this.player.destroy();
+        }
+
         let tile = this.pickEmptyTile();
         if (tile) {
             this.player = new Unit(this.scene, "knight", 10);
+            if (player_health < this.player.health) {
+                this.player.health = player_health;
+                this.player.updateBar();
+            }
             this.player.type = Unit.PLAYER;
             this.player.on("UNIT_MOVED", this.onUnitMoved, this);
             //this.player.attack = 10;
@@ -68,8 +99,6 @@ class Map extends Phaser.GameObjects.Container {
             //this.moveUnit(this.player, 0, 0);
             this.add(this.player);
         }
-
-        this.nextTurn();
     }
 
 
@@ -112,31 +141,6 @@ class Map extends Phaser.GameObjects.Container {
     }
 
     generateLevel() {
-        this.tiles = [];
-
-        /* Generate all tiles */
-        for (let y=0; y<this.config.height; y++) {
-            for (let x=0; x<this.config.width; x++) {
-
-                let tile;
-                try {
-
-                    tile = new Tile(this.scene);
-                } catch(err) {
-                    alert("Err:");
-                    alert(err);
-                }
-                tile.gridX = x;
-                tile.gridY = y;
-
-                tile.x = tile.getBounds().width * x;
-                tile.y = tile.getBounds().height * y;
-
-                this.add(tile);
-                this.tiles.push(tile);
-            }
-        }
-
         let generatingMap = true;
         /* Generate the walls and floors */
         do {
@@ -163,6 +167,11 @@ class Map extends Phaser.GameObjects.Container {
     }
 
     generateEnemies() {
+        this.enemies.forEach(single_enemy => {
+            single_enemy.destroy();
+        });
+        this.enemies = [];
+
         /*
         Bird: our basic monster with no special behavior
 Snake: moves twice (yes, basically copied from 868-HACK's Virus)
@@ -184,7 +193,7 @@ Jester: moves randomly
         }
     }
 
-    generateMap() {
+    generatePathfindingMap() {
         let map = [];
 
         this.tiles.forEach(single_tile => {
@@ -462,7 +471,7 @@ Jester: moves randomly
             this.scene.cameras.main.shake(500);
             this.attackUnit(single_enemy, this.player, this.nextTurn);
         } else {
-            let pf = new Pathfinding(this.generateMap(), this.config.width, this.config.height);
+            let pf = new Pathfinding(this.generatePathfindingMap(), this.config.width, this.config.height);
             let tiles = pf.find({x: single_enemy.gridX, y: single_enemy.gridY}, {x: this.player.gridX, y: this.player.gridY});
 
             if (tiles.length > 1) {
@@ -497,7 +506,7 @@ Jester: moves randomly
             case Action.SPELL:
                 switch (action.spell) {
                     case "WARP":
-
+                        // Randomly warp the player
                         let effect = this.scene.add.sprite(this.player.x + (this.player.width * this.player.scaleX) / 2, this.player.y + (this.player.height * this.player.scaleY) / 2, "tileset:effectsSmall");
                         this.add(effect);
 
@@ -525,6 +534,7 @@ Jester: moves randomly
                         effect.anims.play("warp", true);
                         break;
                     case "QUAKE":
+                        // Hit enemies depending on how much walls are around them
                         this.scene.cameras.main.shake(500);
 
                         this.enemies.forEach(single_enemy => {
@@ -542,6 +552,52 @@ Jester: moves randomly
                                 }
                             }
                         });
+
+                        this.nextTurn();
+                        break;
+                    case "MAELSTROM":
+                        // Randomly move all enemies
+                        this.enemies.forEach(single_enemy => {
+                            let effect = this.scene.add.sprite(single_enemy.x + (single_enemy.width * single_enemy.scaleX) / 2, single_enemy.y + (single_enemy.height * single_enemy.scaleY) / 2, "tileset:effectsSmall");
+                            this.add(effect);
+                            single_enemy.is_moving = true;
+
+                            effect.on("animationcomplete", function(tween, sprite, element) {
+                                element.destroy();
+
+                                let tile = this.pickEmptyTile();
+
+                                let effect = this.scene.add.sprite(tile.x, tile.y, "tileset:effectsSmall");
+                                effect.x += (effect.width/2);
+                                effect.y += (effect.height/2);
+                                this.add(effect);
+                                effect.on("animationcomplete", function(tween, sprite, element) {
+                                    element.destroy();
+
+                                    this.moveUnit(single_enemy, tile.gridX, tile.gridY);
+
+                                    single_enemy.is_moving = false;
+                                    let remaining_animations = this.enemies.filter(single_enemy => single_enemy.is_moving);
+                                    if (remaining_animations.length == 0) {
+                                        this.nextTurn();
+                                    }
+
+                                }, this);
+                                effect.anims.play("warp", true);
+
+                            }, this);
+
+                            effect.anims.play("warp", true);
+                        });
+                        break;
+                    case "MULLIGAN":
+                        // Reset the map, and reduce the player health by 50% (min at 1)
+                        let player_health = Math.max(1, Math.floor(this.player.health / 2));
+                        this.generateMap(player_health);
+
+                        /* Since the player will always be first, remove the first turn to allow the enemy to have the next move */
+                        this.generateTurns();
+                        this.turns.shift();
 
                         this.nextTurn();
                         break;

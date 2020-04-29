@@ -73,7 +73,7 @@ class Unit extends Phaser.GameObjects.Container {
         this.add(this.status);
         this.healthBar.push(this.status);
 
-        this.status.displayWidth = 15;
+        this.updateBar();
     }
 
     revive() {
@@ -81,10 +81,15 @@ class Unit extends Phaser.GameObjects.Container {
         this.emit("UNIT_REVIVED", this);
     }
 
+    updateBar() {
+        this.status.displayWidth = (30 * this.health / this.maxHealth);
+    }
+
     damage(amount) {
         this.health = Math.max(0, this.health - amount);
 
-        this.status.displayWidth = (30 * this.health / this.maxHealth);
+        this.updateBar();
+
         if (!this.isAlive()) {
             this.healthBar.forEach(single_element => {
                 single_element.destroy();
