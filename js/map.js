@@ -32,7 +32,7 @@ class Map extends Phaser.GameObjects.Container {
             }
         }
 
-        this.generateMap(10);
+        this.depth = 1;
     }
 
     /* Generate enemies on free spaces */
@@ -91,27 +91,32 @@ class Map extends Phaser.GameObjects.Container {
     }
 
     /* Generate the map */
-    generateMap(player_health) {
+    generateMap(data) {
+        console.log(data);
         this.turns = [];
 
         this.generateLevel();
 
         this.generateEnemies();
 
+        /* Generate the exit stair */
+        if (this.stair != undefined) {
+            this.stair.destroy();
+        }
+        let tile = this.pickEmptyTile();
+        this.stair = new Stair(this.scene);
+        this.placeUnit(this.stair, tile.gridX, tile.gridY);
+        this.add(this.stair);
+
+        /* Add the player */
         if (this.player != undefined) {
             this.player.destroy();
         }
-
-        let tile = this.pickEmptyTile();
-        let item = new Stair(this.scene);
-        this.placeUnit(item, tile.gridX, tile.gridY);
-        this.add(item);
-
         tile = this.pickEmptyTile();
         if (tile) {
             this.player = new Unit(this.scene, "knight", 10);
-            if (player_health < this.player.health) {
-                this.player.health = player_health;
+            if (data.player_health < this.player.health) {
+                this.player.health = data.player_health;
                 this.player.updateBar();
             }
             this.player.type = Unit.PLAYER;
@@ -283,6 +288,29 @@ class Map extends Phaser.GameObjects.Container {
 
     /* Show the available actions for the player */
     showActions() {
+        // Enable stair action
+        if (this.player.gridX == this.stair.gridX && this.player.gridY == this.stair.gridY) {
+            let action = new Action(this.scene, Action.STAIR);
+            action.background.setFrame(5);
+
+            action.x = (this.player.gridX * this.player.getBounds().width) + this.player.getBounds().width/2;
+            action.y = (this.player.gridY * this.player.getBounds().height) + this.player.getBounds().height/2;
+            action.on("ACTION_CLICKED", this.onActionClicked, this);
+
+            this.scene.tweens.add({
+                targets: action,
+                scaleX: 0.5,
+                scaleY: 0.5,
+                ease: 'Cubic',
+                duration: 300,
+                yoyo: true,
+                repeat: -1
+            });
+
+            this.add(action);
+            this.actions.push(action);
+        }
+
         // Enable move actions
         let neighboors = this.getAdjacentTiles(this.player.gridX, this.player.gridY);
         neighboors.forEach(single_neighboor => {

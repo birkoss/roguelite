@@ -14,6 +14,10 @@ class MainScene extends Phaser.Scene {
         this.map.on("END_TURN", this.nextTurn, this);
         this.map.on("ACTION_CLICKED", this.onMapActionClicked, this);
 
+        this.map.generateMap({
+            player_health: 10
+        });
+
         this.map.x = (this.game.config.width - this.map.getBounds().width) / 2;
         this.map.y = this.map.x;
 
@@ -216,6 +220,14 @@ class MainScene extends Phaser.Scene {
     /* Execute an action (from the Map or a Spell) */
     executeAction(action) {
         switch (action.type) {
+            case Action.STAIR:
+                this.map.generateMap({
+                    player_health: this.map.player.health
+                });
+
+                this.generateTurns();
+                this.nextTurn();
+                break;
             case Action.MOVE:
                 this.map.player.move(action.target.gridX, action.target.gridY);
                 break;
@@ -224,6 +236,15 @@ class MainScene extends Phaser.Scene {
                 break;
             case Action.SPELL:
                 switch (action.spell) {
+                    // DASH: Move in the last position until an enemy (and attack) or a wall and stop
+                    // DIG: Break walls around (but not the borders)
+                    // KINGMAKER: Heal all monster and generate a chest under them
+                    // ALCHEMY: Add a chest in all floor tiles surrounding us
+                    // POWER: Make the attack do more damage (6)
+                    // BRAVERY: Stun all enemies (allow another turn)
+                    // BOLT: Generate a bolt in the last direction (4 damage)
+                    // CROSS: Generate a bolt in all direction for 2 damage
+                    // https://nluqo.github.io/broughlike-tutorial/stage8.html
                     case "WARP":
                         // Randomly warp the player
                         let effect = this.add.sprite(this.map.player.x + (this.map.player.width * this.map.player.scaleX) / 2, this.map.player.y + (this.map.player.height * this.map.player.scaleY) / 2, "tileset:effectsSmall");
@@ -323,7 +344,9 @@ class MainScene extends Phaser.Scene {
                     case "MULLIGAN":
                         // Reset the map, and reduce the player health by 50% (min at 1)
                         let player_health = Math.max(1, Math.floor(this.map.player.health / 2));
-                        this.map.generateMap(player_health);
+                        this.map.generateMap({
+                            player_health: player_health
+                        });
 
                         /* Since the player will always be first, remove the first turn to allow the enemy to have the next move */
                         this.generateTurns();
