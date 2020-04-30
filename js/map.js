@@ -90,9 +90,15 @@ class Map extends Phaser.GameObjects.Container {
         } while (generatingMap);
     }
 
+    setPlayer(player) {
+        this.player = player;
+        this.add(this.player);
+
+        this.player.on("UNIT_MOVED", this.onUnitMoved, this);
+    }
+
     /* Generate the map */
-    generateMap(data) {
-        console.log(data);
+    generateMap() {
         this.turns = [];
 
         this.generateLevel();
@@ -108,24 +114,9 @@ class Map extends Phaser.GameObjects.Container {
         this.placeUnit(this.stair, tile.gridX, tile.gridY);
         this.add(this.stair);
 
-        /* Add the player */
-        if (this.player != undefined) {
-            this.player.destroy();
-        }
+        /* Place the player */
         tile = this.pickEmptyTile();
-        if (tile) {
-            this.player = new Unit(this.scene, "knight", 10);
-            if (data.player_health < this.player.health) {
-                this.player.health = data.player_health;
-                this.player.updateBar();
-            }
-            this.player.type = Unit.PLAYER;
-            this.player.on("UNIT_MOVED", this.onUnitMoved, this);
-            //this.player.attack = 10;
-            this.placeUnit(this.player, tile.gridX, tile.gridY);
-            //this.placeUnit(this.player, 0, 0);
-            this.add(this.player);
-        }
+        this.placeUnit(this.player, tile.gridX, tile.gridY);
     }
 
     /* Export the map as a binary array to use with the pathfinding */

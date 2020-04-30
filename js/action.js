@@ -29,4 +29,4 @@ class Action extends Phaser.GameObjects.Container {
 Action.MOVE = 1;
 Action.ATTACK = 2;
 Action.SPELL = 3;
-Action.STAIR = 3;
+Action.STAIR = 4;

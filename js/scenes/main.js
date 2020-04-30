@@ -10,13 +10,15 @@ class MainScene extends Phaser.Scene {
     }
 
     create() {
+        this.player = new Unit(this, "knight", 10);
+        this.player.type = Unit.PLAYER;
+
         this.map = new Map(this, 7, 10);
         this.map.on("END_TURN", this.nextTurn, this);
         this.map.on("ACTION_CLICKED", this.onMapActionClicked, this);
+        this.map.setPlayer(this.player);
 
-        this.map.generateMap({
-            player_health: 10
-        });
+        this.map.generateMap();
 
         this.map.x = (this.game.config.width - this.map.getBounds().width) / 2;
         this.map.y = this.map.x;
@@ -221,9 +223,7 @@ class MainScene extends Phaser.Scene {
     executeAction(action) {
         switch (action.type) {
             case Action.STAIR:
-                this.map.generateMap({
-                    player_health: this.map.player.health
-                });
+                this.map.generateMap();
 
                 this.generateTurns();
                 this.nextTurn();
@@ -343,10 +343,9 @@ class MainScene extends Phaser.Scene {
                         break;
                     case "MULLIGAN":
                         // Reset the map, and reduce the player health by 50% (min at 1)
-                        let player_health = Math.max(1, Math.floor(this.map.player.health / 2));
-                        this.map.generateMap({
-                            player_health: player_health
-                        });
+                        this.player.health = Math.max(1, Math.floor(this.map.player.health / 2)); 
+                        this.player.updateBar();
+                        this.map.generateMap();
 
                         /* Since the player will always be first, remove the first turn to allow the enemy to have the next move */
                         this.generateTurns();
