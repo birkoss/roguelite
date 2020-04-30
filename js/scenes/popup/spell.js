@@ -1,4 +1,10 @@
 class PopupSpell extends PopupScene {
+    constructor(spellID) {
+        super();
+        
+        this.spellID = spellID;
+    }
+
     create() {
        super.create();
 
@@ -12,7 +18,7 @@ class PopupSpell extends PopupScene {
         let background = new Ninepatch(this, 300, 370, "brown");
         this.popup_container.add(background);
 
-        let title = "SORT XZYZ";
+        let title = this.spellID;
         let description = "Ce sort permet\nde te téléporter\nau hasard\nailleurs dans\nla carte!";
 
         let text = this.add.bitmapText(0, 0, "font:gui", title, 30, Phaser.GameObjects.BitmapText.ALIGN_CENTER).setOrigin(0);

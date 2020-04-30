@@ -1,5 +1,5 @@
 class PopupScene extends Phaser.Scene {
-    constructor(type, config) {
+    constructor(type) {
         super({key:'PopupScene'});
 
         this.popup_type = type;

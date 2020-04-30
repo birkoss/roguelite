@@ -100,11 +100,6 @@ class MainScene extends Phaser.Scene {
 
         this.turns = [];
         this.nextTurn();
-
-        let popup = new PopupSpell();
-        popup.setEvent(this.onPopupClosed, this);
-
-        this.scene.add("popup_game_over", popup, true);
     }
 
     /* Generate the next turn for each enemies and the player */
@@ -414,14 +409,21 @@ class MainScene extends Phaser.Scene {
 
     /* When a spell is clicked */
     onSpellBtnClicked(btn) {
-        btn.setCountdown();
 
-        this.map.clearActions();
+        let popup = new PopupSpell(btn.spell);
+        popup.setEvent(function(popup_button) {
+            if (popup_button == "Yes") {
+                btn.setCountdown();
 
-        this.executeAction({
-            type: Action.SPELL,
-            spell: btn.spell
-        });
+                this.map.clearActions();
+
+                this.executeAction({
+                    type: Action.SPELL,
+                    spell: btn.spell
+                });
+            }
+        }, this);
+        this.scene.add("popup_spell", popup, true);
     }
 
     onPopupClosed(button) {
