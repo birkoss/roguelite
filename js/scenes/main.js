@@ -100,6 +100,11 @@ class MainScene extends Phaser.Scene {
 
         this.turns = [];
         this.nextTurn();
+
+        let popup = new PopupSpell();
+        popup.setEvent(this.onPopupClosed, this);
+
+        this.scene.add("popup_game_over", popup, true);
     }
 
     /* Generate the next turn for each enemies and the player */
@@ -417,5 +422,9 @@ class MainScene extends Phaser.Scene {
             type: Action.SPELL,
             spell: btn.spell
         });
+    }
+
+    onPopupClosed(button) {
+
     }
 };
