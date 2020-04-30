@@ -53,7 +53,7 @@ class Map extends Phaser.GameObjects.Container {
             let tile = this.pickEmptyTile();
 
             let enemy = new Unit(this.scene, "skeleton", 5);
-            enemy.on("UNIT_MOVED", this.onEnemyAction, this);
+            enemy.on("UNIT_MOVED", this.onUnitMoved, this);
 
             this.placeUnit(enemy, tile.gridX, tile.gridY);
             this.add(enemy);
@@ -344,34 +344,20 @@ class Map extends Phaser.GameObjects.Container {
         });
     }
 
-    nextTurn() {
-        this.emit("END_TURN");
+    /* Remove all actions */
+    clearActions() {
+        this.actions.forEach(single_action => {
+            single_action.destroy();
+        });
     }
 
     /* Events */
 
-    onUnitMoved(unit) {
-        this.nextTurn();
-    }
-
     onActionClicked(action) {
-        this.actions.forEach(single_action => {
-            single_action.destroy();
-        });
-
         this.emit("ACTION_CLICKED", action);
     }
 
-    onEnemyAction(unit) {
-        let completed = true;
-        this.enemies.forEach(single_enemy => {
-            if (single_enemy.isMoving()) {
-                completed = false;
-            }
-        });
-
-        if (completed) {
-            this.nextTurn();
-        }
+    onUnitMoved(unit) {
+        this.emit("END_TURN");
     }
 };

@@ -211,15 +211,7 @@ class MainScene extends Phaser.Scene {
         }
     }
 
-    /* Events */
-
-    /* When an action is clicked from the map */
-    onMapActionClicked(action) {
-        /* Disable all spells buttons */
-        this.buttons.forEach(single_button => {
-            single_button.disable();
-        });
-
+    executeAction(action) {
         switch (action.type) {
             case Action.MOVE:
                 this.map.player.move(action.target.gridX, action.target.gridY);
@@ -378,10 +370,25 @@ class MainScene extends Phaser.Scene {
         }
     }
 
+    /* Events */
+
+    /* When an action is clicked from the map */
+    onMapActionClicked(action) {
+        /* Disable all spells buttons */
+        this.buttons.forEach(single_button => {
+            single_button.disable();
+        });
+
+        this.executeAction(action);
+    }
+
     /* When a spell is clicked */
     onSpellBtnClicked(btn) {
         btn.setCountdown();
-        this.map.onActionClicked({
+
+        this.map.clearActions();
+
+        this.executeAction({
             type: Action.SPELL,
             spell: btn.spell
         });
