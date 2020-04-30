@@ -103,6 +103,11 @@ class Map extends Phaser.GameObjects.Container {
         }
 
         let tile = this.pickEmptyTile();
+        let item = new Stair(this.scene);
+        this.placeUnit(item, tile.gridX, tile.gridY);
+        this.add(item);
+
+        tile = this.pickEmptyTile();
         if (tile) {
             this.player = new Unit(this.scene, "knight", 10);
             if (player_health < this.player.health) {
