@@ -35,7 +35,9 @@ class Map extends Phaser.GameObjects.Container {
         this.generateMap(10);
     }
 
+    /* Generate enemies on free spaces */
     generateEnemies() {
+        /* Delete existing enemies */
         this.enemies.forEach(single_enemy => {
             single_enemy.destroy();
         });
@@ -47,7 +49,6 @@ class Map extends Phaser.GameObjects.Container {
         Tank: moves every other turn
         Eater: destroys walls and heals by doing so
         Jester: moves randomly
-
         */
         for (let i=0; i<2; i++) {
             let tile = this.pickEmptyTile();
@@ -62,6 +63,7 @@ class Map extends Phaser.GameObjects.Container {
         }
     }
 
+    /* Generate a valid level */
     generateLevel() {
         let generatingMap = true;
         /* Generate the walls and floors */
@@ -88,6 +90,7 @@ class Map extends Phaser.GameObjects.Container {
         } while (generatingMap);
     }
 
+    /* Generate the map */
     generateMap(player_health) {
         this.turns = [];
 
@@ -354,6 +357,7 @@ class Map extends Phaser.GameObjects.Container {
     /* Events */
 
     onActionClicked(action) {
+        this.clearActions();
         this.emit("ACTION_CLICKED", action);
     }
 

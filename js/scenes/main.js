@@ -96,6 +96,7 @@ class MainScene extends Phaser.Scene {
         this.nextTurn();
     }
 
+    /* Generate the next turn for each enemies and the player */
     generateTurns() {
         this.turns = [];
 
@@ -108,6 +109,7 @@ class MainScene extends Phaser.Scene {
         });
     }
 
+    /* Pick the next unit */
     nextTurn() {
         if (!this.map.player.isAlive()) {
             alert("YOU ARE DEAD!!!");
@@ -211,6 +213,7 @@ class MainScene extends Phaser.Scene {
         }
     }
 
+    /* Execute an action (from the Map or a Spell) */
     executeAction(action) {
         switch (action.type) {
             case Action.MOVE:
