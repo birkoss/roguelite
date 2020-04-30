@@ -25,6 +25,7 @@ class BootScene extends Phaser.Scene {
         this.load.spritesheet('tileset:effectsSmall', 'assets/sprites/effectsSmall.png', { frameWidth: 48, frameHeight: 48 });
 
         this.load.json('data:units', 'assets/units.json');
+        this.load.json('data:spells', 'assets/spells.json');
     }
  
     create() {

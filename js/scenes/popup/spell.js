@@ -18,8 +18,15 @@ class PopupSpell extends PopupScene {
         let background = new Ninepatch(this, 300, 370, "brown");
         this.popup_container.add(background);
 
-        let title = this.spellID;
-        let description = "Ce sort permet\nde te téléporter\nau hasard\nailleurs dans\nla carte!";
+        let title = "";
+        let description = "";
+
+        this.cache.json.get('data:spells').forEach(single_data => {
+            if (single_data.id == this.spellID) {
+                title = single_data.name;
+                description = single_data.description;
+            }
+        }, this);
 
         let text = this.add.bitmapText(0, 0, "font:gui", title, 30, Phaser.GameObjects.BitmapText.ALIGN_CENTER).setOrigin(0);
         text.x = (background.getBounds().width - text.getTextBounds().local.width) / 2;

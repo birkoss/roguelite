@@ -1,0 +1,26 @@
+[{
+	"id": "WARP",
+	"countdown": 4,
+	"name": "Fuite",
+	"description": "Ce sort permet\nde te téléporter\naléatoirement\nailleurs dans\nla carte!"
+},{
+	"id": "AURA",
+	"countdown": 4,
+	"name": "Soin",
+	"description": "Ce sort permet\nde te guérir\nainsi que\nles ennemis\nadjacents!"
+},{
+	"id": "MULLIGAN",
+	"countdown": 4,
+	"name": "Mulligan",
+	"description": "Ce sort permet\nde regénérer\nla carte en\néchange de 50%\nde ta santé!"
+},{
+	"id": "MAELSTROM",
+	"countdown": 4,
+	"name": "Maelstrom",
+	"description": "Ce sort permet\nde téléporter\naléatoirement\ntous les enemies\ndans la carte!"
+},{
+	"id": "QUAKE",
+	"countdown": 4,
+	"name": "Tremblement",
+	"description": "Ce sort permet\nde te blesser\ntous les ennemis\nselon le nombre\nde mur autour!"
+}]
