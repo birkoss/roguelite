@@ -29,7 +29,6 @@ class CustomButton extends Phaser.GameObjects.Container {
     /* Events */
 
     onPointerUp() {
-        console.log(this.spell);
     	if (this.isPressed) {
             this.onPointerOut();
     		this.emit("BUTTON_CLICKED", this);
@@ -37,7 +36,6 @@ class CustomButton extends Phaser.GameObjects.Container {
     }
 
     onPointerDown() {
-        console.log(this.spell);
         if (this.isPressed) {
             return;
         }
@@ -46,7 +44,6 @@ class CustomButton extends Phaser.GameObjects.Container {
     }
 
     onPointerOut() {
-        console.log(this.spell);
     	this.isPressed = false;
         if (!this.isDisabled) {
             this.background.setFrame(0);
