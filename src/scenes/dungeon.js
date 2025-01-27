@@ -78,9 +78,9 @@ export class DungeonScene extends Phaser.Scene {
 
                 this.#container.add(tile.block.container);
 
-                // @TODO: Check to make sure it's not an infinite loop
+                // TODO: Check to make sure it's not an infinite loop
                 do {
-                    // @TODO: Make sure the total number of index is dynamic
+                    // TODO: Make sure the total number of index is dynamic
                     let randomFrameIndex = Phaser.Math.Between(0, 4);
 
                     tile.block.icon.setFrame(randomFrameIndex);
@@ -268,11 +268,7 @@ export class DungeonScene extends Phaser.Scene {
         for (let y = this.#height - 2; y >= 0; y--) {
             for (let x = 0; x < this.#width; x++) {
                 let tile = this.#getTileAt(x, y);
-                if (tile === null) {
-                    continue;
-                }
-
-                if (tile.isEmpty) {
+                if (tile === null || tile.isEmpty) {
                     continue;
                 }
                 
@@ -295,12 +291,7 @@ export class DungeonScene extends Phaser.Scene {
         for (let y = this.#height - 1; y >= 0; y--) {
             for (let x = 0; x < this.#width; x++) {
                 let tile = this.#getTileAt(x, y);
-
-                if (tile === null) {
-                    continue;
-                }
-
-                if (tile.isEmpty) {
+                if (tile === null || tile.isEmpty) {
                     continue;
                 }
 
@@ -356,7 +347,7 @@ export class DungeonScene extends Phaser.Scene {
         return holes;
     }
 
-    // @TODO: Merge both holes functions
+    // TODO: Merge both holes functions
 
     /**
      * @param {number} x 
@@ -381,7 +372,7 @@ export class DungeonScene extends Phaser.Scene {
             let holes = this.#holesInCol(x);
             if (holes > 0) {
                 for (let i = 0; i < holes; i ++) {
-                    // @TODO: Do not repeat this code
+                    // TODO: Do not repeat this code
                     let randomFrameIndex = Phaser.Math.Between(0, 4);
 
                     let tile = this.#getTileAt(x, i);
@@ -468,23 +459,6 @@ export class DungeonScene extends Phaser.Scene {
                         }
                     }
                 });
-
-                // this.tweens.add({
-                //     targets: tile.sprite,
-                //     scaleX: 1.2,
-                //     scaleY: 1.2,
-                //     duration: 100,
-                //     callbackScope: this,
-                //     onComplete: () => {
-                //         totalTiles--;
-
-                //         tile.updateState({toRemove: true});
-
-                //         if (totalTiles === 0) {
-                //             this.#destroyTiles();
-                //         }
-                //     }
-                // });
             });
         });
     }
