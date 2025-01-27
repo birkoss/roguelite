@@ -42,6 +42,7 @@ export class DungeonScene extends Phaser.Scene {
     }
 
     /**
+     * Create the tiles and blocks for the dungeon
      * @param {number} width 
      * @param {number} height 
      */
@@ -69,8 +70,6 @@ export class DungeonScene extends Phaser.Scene {
             }
         }
 
-        
-
         // Create the block background and icon
         for (let y = 0; y < height; y++) {
             for(let x = 0; x < width; x++) {
@@ -88,15 +87,15 @@ export class DungeonScene extends Phaser.Scene {
             }
         }
 
-        // Create a mask for the container (Hide newly added tiles)
+        // Create a mask for the container (Hide reused tiles)
         const mask = this.add.graphics()
-        .fillStyle(0x000000, 0)
-        .fillRect(this.#container.x, this.#container.y, this.#container.getBounds().width, this.#container.getBounds().height);
-
+            .fillStyle(0x000000, 0)
+            .fillRect(this.#container.x, this.#container.y, this.#container.getBounds().width, this.#container.getBounds().height);
         this.#container.mask = new Phaser.Display.Masks.GeometryMask(this, mask);
     }
 
     /**
+     * Determine if there are any matches on the board
      * @returns {boolean}
      */
     #hasMatches() {
@@ -111,6 +110,7 @@ export class DungeonScene extends Phaser.Scene {
     }
 
     /**
+     * Determine if there are any matches at the specified coordinates
      * @param {number} x
      * @param {number} y
      * @returns {boolean}
@@ -138,8 +138,10 @@ export class DungeonScene extends Phaser.Scene {
     }
 
     /**
-     * @param {number} x 
-     * @param {number} y 
+     * Get a tile at the specified coordinates
+     * - Returns null if the coordinates are out of bounds
+     * @param {number} x
+     * @param {number} y
      * @returns {Tile}
      */
     #getTileAt(x, y) {
@@ -154,6 +156,8 @@ export class DungeonScene extends Phaser.Scene {
     }
 
     /**
+     * Called when the player selects a tile
+     * - Highlights the entire row
      * @param {Phaser.Input.Pointer} pointer 
      */
     #selectTile(pointer) {
@@ -184,6 +188,9 @@ export class DungeonScene extends Phaser.Scene {
     }
 
     /**
+     * Called when the player unselects a tile
+     * - Removes the highlight from the entire row
+     * - Removes the row if already selected
      * @param {Phaser.Input.Pointer} pointer 
      */
     #unselectTile(pointer) {
@@ -207,7 +214,6 @@ export class DungeonScene extends Phaser.Scene {
         let y = Math.floor((pointer.y - this.#container.y) / TILE_SIZE);
 
         let tile = this.#getTileAt(x, y);
-
         if (tile !== null && tile === this.#selectedTile) {
             this.#canSelect = false;
 
@@ -271,7 +277,7 @@ export class DungeonScene extends Phaser.Scene {
                     continue;
                 }
                 
-                let holes = this.#holesBelow(x, y);
+                let holes = this.#getHolesBelow(x, y);
                 if (holes > 0) {
                     let otherTile = this.#getTileAt(x, y + holes);
                     otherTile.block = tile.block;
@@ -303,23 +309,22 @@ export class DungeonScene extends Phaser.Scene {
                         targets: tile.block.container,
                         y: newY,
                         duration: 100 * totalHoles,
-                        callbackScope: this,
-                            onComplete: () => {
-                                totalTiles--;
-    
-                                if (totalTiles === 0) {
-                                    if (this.#hasMatches()) {
-                                        // Pause before removing the matches
-                                        this.time.addEvent({
-                                            delay: 200,
-                                            callback: this.#handleMatches,
-                                            callbackScope: this,
-                                        });
-                                    } else {
-                                        this.#canSelect = true;
-                                    }
+                        onComplete: () => {
+                            totalTiles--;
+
+                            if (totalTiles === 0) {
+                                if (this.#hasMatches()) {
+                                    // Pause before removing the matches
+                                    this.time.addEvent({
+                                        delay: 200,
+                                        callback: this.#handleMatches,
+                                        callbackScope: this,
+                                    });
+                                } else {
+                                    this.#canSelect = true;
                                 }
                             }
+                        }
                     });
                 }
             }
@@ -327,11 +332,13 @@ export class DungeonScene extends Phaser.Scene {
     }
 
     /**
+     * Return the number of empty tiles below the specified tile
+     * - Used to determine how many tiles to move down
      * @param {number} x
      * @param {number} [y]
      * @returns {number}
      */
-    #holesBelow(x, y = -1) {
+    #getHolesBelow(x, y = -1) {
         let holes = 0;
         for(let y2 = y + 1; y2 < this.#height; y2++) {
             let tile = this.#getTileAt(x, y2);
@@ -347,7 +354,7 @@ export class DungeonScene extends Phaser.Scene {
 
     #addNewTiles() {
         for(let x = 0; x < this.#width; x++) {
-            let holes = this.#holesBelow(x);
+            let holes = this.#getHolesBelow(x);
             if (holes > 0) {
                 for (let i = 0; i < holes; i ++) {
                     let tile = this.#getTileAt(x, i);
@@ -445,6 +452,11 @@ export class DungeonScene extends Phaser.Scene {
         });
     }
 
+    /**
+     * Pick a random color from the available colors
+     * - Used to pick an icon for the tile's block
+     * @returns {number}
+     */
     #generateRandomColor() {
         // TODO: Make sure the total number of index is dynamic
         return Phaser.Math.Between(0, 4);
