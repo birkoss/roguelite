@@ -23,6 +23,16 @@ export class Block {
     get icon() { return this.#icon; }
     get container() { return this.#container; }
 
+
+
+    highlight() {
+        this.#background.setFrame(1);
+    }
+    
+    unhighlight() {
+        this.#background.setFrame(0);
+    }
+
     /**
      * @param {number} newColor
      */

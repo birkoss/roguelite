@@ -81,9 +81,7 @@ export class DungeonScene extends Phaser.Scene {
 
                 // TODO: Check to make sure it's not an infinite loop
                 do {
-                    // TODO: Make sure the total number of index is dynamic
-                    let randomFrameIndex = Phaser.Math.Between(0, 4);
-                    tile.block.updateColor(randomFrameIndex);
+                    tile.block.updateColor(this.#generateRandomColor());
                 } while(this.#isMatchAt(x, y));
             }
         }
@@ -178,7 +176,7 @@ export class DungeonScene extends Phaser.Scene {
                 if (otherTile === null) {
                     continue;
                 }
-                otherTile.block.background.setFrame(1);
+                otherTile.block.highlight();
             }
         }
     }
@@ -199,7 +197,7 @@ export class DungeonScene extends Phaser.Scene {
             if (rowTile === null) {
                 continue;
             }
-            rowTile.block.background.setFrame(0);
+            rowTile.block.unhighlight();
         }
 
 
@@ -370,22 +368,20 @@ export class DungeonScene extends Phaser.Scene {
             let holes = this.#holesInCol(x);
             if (holes > 0) {
                 for (let i = 0; i < holes; i ++) {
-                    // TODO: Do not repeat this code
-                    let randomFrameIndex = Phaser.Math.Between(0, 4);
-
                     let tile = this.#getTileAt(x, i);
                     if (tile === null) {
                         continue;
                     }
-                    tile.block = this.#blocksPooled.pop()
 
-                    tile.block.updateColor(randomFrameIndex);
+                    tile.block = this.#blocksPooled.pop();
+
+                    tile.block.updateColor(this.#generateRandomColor());
 
                     tile.block.container.visible = true;
                     tile.block.container.x = TILE_SIZE * x + TILE_SIZE / 2;
                     tile.block.container.y = TILE_SIZE / 2 - (holes - i) * TILE_SIZE;
                     tile.block.container.alpha = 1;
-                    tile.block.background.setFrame(0);
+                    tile.block.unhighlight();
                     tile.updateState({isEmpty: false});
                 }
             }
@@ -449,7 +445,7 @@ export class DungeonScene extends Phaser.Scene {
         streaks.forEach(singleStreak => {
             singleStreak.tiles.forEach(tile => {
                 totalTiles++;
-                tile.block.background.setFrame(1);
+                tile.block.highlight();
 
                 this.time.addEvent({
                     delay: 200,
@@ -465,5 +461,10 @@ export class DungeonScene extends Phaser.Scene {
                 });
             });
         });
+    }
+
+    #generateRandomColor() {
+        // TODO: Make sure the total number of index is dynamic
+        return Phaser.Math.Between(0, 4);
     }
 }
