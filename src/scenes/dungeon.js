@@ -86,7 +86,7 @@ export class DungeonScene extends Phaser.Scene {
         .fillStyle(0x000000, 0)
         .fillRect(this.#container.x, this.#container.y, this.#container.getBounds().width, this.#container.getBounds().height);
 
-        // this.#container.mask = new Phaser.Display.Masks.GeometryMask(this, mask);
+        this.#container.mask = new Phaser.Display.Masks.GeometryMask(this, mask);
     }
 
     /**
@@ -347,6 +347,8 @@ export class DungeonScene extends Phaser.Scene {
         return holes;
     }
 
+    // @TODO: Merge both holes functions
+
     /**
      * @param {number} x 
      * @returns {number}
@@ -384,6 +386,7 @@ export class DungeonScene extends Phaser.Scene {
                     tile.sprite.x = TILE_SIZE * x + TILE_SIZE / 2;
                     tile.sprite.y = TILE_SIZE / 2 - (holes - i) * TILE_SIZE;
                     tile.sprite.alpha = 1;
+                    tile.sprite.setScale(1);
                     tile.updateState({isEmpty: false});
                 }
             }
@@ -391,6 +394,8 @@ export class DungeonScene extends Phaser.Scene {
     }
 
     #handleMatches() {
+        let streaks = [];
+
         for (let x = 0; x < this.#width; x++) {
             let colorStreak = 1;
             let currentColor = -1;
@@ -402,19 +407,24 @@ export class DungeonScene extends Phaser.Scene {
                 if(colorToWatch === currentColor){
                     colorStreak++;
                 }
-                // Another color or last row
+                // Another color or at the bottom
                 if (colorToWatch !== currentColor || y === this.#height - 1) {
                     let endStreak = (colorToWatch === currentColor ? y : y - 1);
                     if (colorStreak >= 3) {
-                        console.log("Streak Length = " + colorStreak + " :: Start = (" + startStreak + "," + endStreak + ") :: Color = " + currentColor);
-
+                        let streak = {
+                            length: colorStreak,
+                            color: currentColor,
+                            tiles: [],
+                        }
                         for (let k = 0; k < colorStreak; k++) {
                             let tile = this.#getTileAt(x, endStreak - k);
                             if (tile === null) {
                                 continue;
                             }
-                            tile.updateState({toRemove: true});
+                            streak.tiles.push(tile);
                         }
+
+                        streaks.push(streak);
                     }
                     startStreak = x;
                     colorStreak = 1;
@@ -423,6 +433,35 @@ export class DungeonScene extends Phaser.Scene {
             }
         }
 
-        this.#destroyTiles();
+        this.#removeMatches(streaks);
+    }
+
+    /**
+     
+     */
+    #removeMatches(streaks) {
+        let totalTiles = 0;
+
+        streaks.forEach(singleStreak => {
+            singleStreak.tiles.forEach(tile => {
+                totalTiles++;
+                this.tweens.add({
+                    targets: tile.sprite,
+                    scaleX: 1.2,
+                    scaleY: 1.2,
+                    duration: 100,
+                    callbackScope: this,
+                    onComplete: () => {
+                        totalTiles--;
+
+                        tile.updateState({toRemove: true});
+
+                        if (totalTiles === 0) {
+                            this.#destroyTiles();
+                        }
+                    }
+                });
+            });
+        });
     }
 }
