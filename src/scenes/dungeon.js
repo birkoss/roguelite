@@ -269,9 +269,9 @@ export class DungeonScene extends Phaser.Scene {
                     continue;
                 }
                 
-                let holesBelow = this.#holesBelow(x, y);
-                if (holesBelow > 0) {
-                    let otherTile = this.#getTileAt(x, y + holesBelow);
+                let holes = this.#holesBelow(x, y);
+                if (holes > 0) {
+                    let otherTile = this.#getTileAt(x, y + holes);
                     otherTile.block = tile.block;
                     otherTile.updateState({isEmpty: false});
 
@@ -325,11 +325,11 @@ export class DungeonScene extends Phaser.Scene {
     }
 
     /**
-     * @param {number} x 
-     * @param {number} y 
+     * @param {number} x
+     * @param {number} [y]
      * @returns {number}
      */
-    #holesBelow(x, y) {
+    #holesBelow(x, y = -1) {
         let holes = 0;
         for(let y2 = y + 1; y2 < this.#height; y2++) {
             let tile = this.#getTileAt(x, y2);
@@ -343,29 +343,9 @@ export class DungeonScene extends Phaser.Scene {
         return holes;
     }
 
-    // TODO: Merge both holes functions
-
-    /**
-     * @param {number} x 
-     * @returns {number}
-     */
-    #holesInCol(x) {
-        let holes = 0;
-        for (let y = 0; y < this.#height; y++) {
-            let tile = this.#getTileAt(x, y);
-            if (tile === null) {
-                continue;
-            }
-            if (tile.isEmpty) {
-                holes++;
-            }
-        }
-        return holes;
-    }
-
     #addNewTiles() {
         for(let x = 0; x < this.#width; x++) {
-            let holes = this.#holesInCol(x);
+            let holes = this.#holesBelow(x);
             if (holes > 0) {
                 for (let i = 0; i < holes; i ++) {
                     let tile = this.#getTileAt(x, i);
