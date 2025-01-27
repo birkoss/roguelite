@@ -2,21 +2,26 @@ import Phaser from "../lib/phaser.js";
 
 import { SCENE_KEYS } from "../keys/scene.js";
 import { TILE_ASSET_KEYS } from "../keys/asset.js";
+import { Tile } from "../tile.js";
 
 const TILE_SIZE = 40;
 
 export class DungeonScene extends Phaser.Scene {
     /** @type {number} */
-    #rows;
+    #width;
     /** @type {number} */
-    #cols;
+    #height;
+
     /** @type {Phaser.GameObjects.Container} */
     #container;
     /** @type {boolean} */
     #canSelect;
 
+    /** @type {Tile[]} */
     #tiles;
+
     #poolTiles;
+    /** @type {Tile} */
     #selectedTile;
 
     constructor() {
@@ -36,38 +41,40 @@ export class DungeonScene extends Phaser.Scene {
     }
 
     /**
-     * 
-     * @param {number} cols 
-     * @param {number} rows 
+     * @param {number} width 
+     * @param {number} height 
      */
-    #createTiles(cols, rows) {
-        this.#rows = rows;
-        this.#cols = cols;
+    #createTiles(width, height) {
+        this.#width = width;
+        this.#height = height;
 
         this.#tiles = [];
         this.#poolTiles = [];
 
         this.#container = this.add.container(40, 100);
 
-        for (let row = 0; row < rows; row++) {
-            this.#tiles[row] = [];
-            for(let col = 0; col < cols; col++) {
-                let tile = this.add.sprite(TILE_SIZE * col + TILE_SIZE/2, TILE_SIZE * row + TILE_SIZE/2, TILE_ASSET_KEYS.TILE);
-                this.#container.add(tile);
+        for (let y = 0; y < height; y++) {
+            for(let x = 0; x < width; x++) {
+                this.#tiles.push(new Tile(x, y, -1, null));
+            }
+        }
 
+        for (let y = 0; y < height; y++) {
+            for(let x = 0; x < width; x++) {
+                let index = (y * width) + x;
+
+                let sprite = this.add.sprite(TILE_SIZE * x + TILE_SIZE/2, TILE_SIZE * y + TILE_SIZE/2, TILE_ASSET_KEYS.TILE);
+                this.#container.add(sprite);
+
+                // @TODO: Check to make sure it's not an infinite loop
                 do {
                     // @TODO: Make sure the total number of index is dynamic
                     let randomFrameIndex = Phaser.Math.Between(0, 4);
-                    tile.setFrame(randomFrameIndex);
-                    this.#tiles[row][col] = {
-                        color: randomFrameIndex,
-                        col: col,
-                        row: row,
-                        sprite: tile,
-                        isEmpty: false,
-                        toRemove: false,
-                    }
-                } while(this.#isMatchAt(row, col));
+                    sprite.setFrame(randomFrameIndex);
+
+                    this.#getTileAt(x, y).color = randomFrameIndex;
+                    this.#getTileAt(x, y).sprite = sprite;
+                } while(this.#isMatchAt(x, y));
             }
         }
 
@@ -84,9 +91,9 @@ export class DungeonScene extends Phaser.Scene {
      * @returns {boolean}
      */
     #hasMatches() {
-        for (let row = 0; row < this.#rows; row++) {
-            for (let col = 0; col < this.#cols; col++) {
-                if (this.#isMatchAt(row, col)){
+        for (let y = 0; y < this.#height; y++) {
+            for (let x = 0; x < this.#width; x++) {
+                if (this.#isMatchAt(x, y)) {
                     return true;
                 }
             }
@@ -94,16 +101,42 @@ export class DungeonScene extends Phaser.Scene {
         return false;
     }
 
-    #isMatchAt(row, col) {
+    #isMatchAt(x, y) {
         // Only check vertical matches for now...
-        return this.#tileAt(row, col).color == this.#tileAt(row - 1, col).color && this.#tileAt(row, col).color == this.#tileAt(row - 2, col).color;
+        let tile = this.#getTileAt(x, y);
+        if (tile === null) {
+            return false;
+        }
+        // Check for X tiles below
+        let matchesThreshold = 3;
+
+        for (let i = 1; i < 3; i++) {
+            let otherTile = this.#getTileAt(x, y - i);
+            if (otherTile === null) {
+                continue;
+            }
+            if (tile.color === otherTile.color) {
+                matchesThreshold--;
+            }
+        }
+
+        return (matchesThreshold <= 1);
     }
 
-    #tileAt(row, col) {
-        if(row < 0 || row >= this.#rows || col < 0 || col >= this.#cols){
-            return -1;
+    /**
+     * @param {number} x 
+     * @param {number} y 
+     * @returns {Tile}
+     */
+    #getTileAt(x, y) {
+        if(y < 0 || y >= this.#height || x < 0 || x >= this.#width) {
+            return null;
         }
-        return this.#tiles[row][col];
+        let index = (y * this.#width) + x;
+        if (index >= this.#tiles.length) {
+            return null;
+        }
+        return this.#tiles[index];
     }
 
     #selectTile(pointer) {
@@ -111,11 +144,11 @@ export class DungeonScene extends Phaser.Scene {
             return;
         }
 
-        let row = Math.floor((pointer.y - this.#container.y) / TILE_SIZE);
-        let col = Math.floor((pointer.x - this.#container.x) / TILE_SIZE);
+        let x = Math.floor((pointer.x - this.#container.x) / TILE_SIZE);
+        let y = Math.floor((pointer.y - this.#container.y) / TILE_SIZE);
 
-        let tile = this.#tileAt(row, col);
-        if (tile === -1) {
+        let tile = this.#getTileAt(x, y);
+        if (tile === null) {
             return;
         }
 
@@ -124,8 +157,8 @@ export class DungeonScene extends Phaser.Scene {
             this.#selectedTile = tile;
 
             // Highlight the entire row)
-            for (let i = 0; i < this.#cols; i++) {
-                this.#tileAt(row, i).sprite.setScale(1.2);
+            for (let i = 0; i < this.#width; i++) {
+                this.#getTileAt(i, y).sprite.setScale(1.2);
             }
         }
     }
@@ -141,25 +174,25 @@ export class DungeonScene extends Phaser.Scene {
         this.#selectedTile.sprite.setDepth(0);
 
         // Unhighlight the entire row)
-        for (let i = 0; i < this.#cols; i++) {
-            this.#tileAt(this.#selectedTile.row, i).sprite.setScale(1);
+        for (let i = 0; i < this.#width; i++) {
+            this.#getTileAt(i, this.#selectedTile.y).sprite.setScale(1);
         }
         
-        let row = Math.floor((pointer.y - this.#container.y) / TILE_SIZE);
-        let col = Math.floor((pointer.x - this.#container.x) / TILE_SIZE);
+        let x = Math.floor((pointer.x - this.#container.x) / TILE_SIZE);
+        let y = Math.floor((pointer.y - this.#container.y) / TILE_SIZE);
 
-        let tile = this.#tileAt(row, col);
-        if (tile === -1) {
+        let tile = this.#getTileAt(x, y);
+        if (tile === null) {
             return;
         }
 
         if (tile === this.#selectedTile) {
-            // Delete entire row
-            for (let i = 0; i < this.#cols; i++) {
-                this.#tileAt(this.#selectedTile.row, i).toRemove = true;;
-            }
-            // tile.toRemove = true;
             this.#canSelect = false;
+
+            // Delete entire selected row
+            for (let i = 0; i < this.#width; i++) {
+                this.#getTileAt(i, this.#selectedTile.y).toRemove = true;
+            }
             this.#destroyTiles();
         }
 
@@ -169,9 +202,9 @@ export class DungeonScene extends Phaser.Scene {
     #destroyTiles() {
         let totalTiles = 0;
 
-        for (let row = 0; row < this.#rows; row++) {
-            for (let col = 0; col < this.#cols; col++) {
-                let tile = this.#tileAt(row, col);
+        for (let y = 0; y < this.#height; y++) {
+            for (let x = 0; x < this.#width; x++) {
+                let tile = this.#getTileAt(x, y);
 
                 if (tile.toRemove) {
                     totalTiles++;
@@ -203,22 +236,22 @@ export class DungeonScene extends Phaser.Scene {
     }
 
     #moveExistingTiles() {
-        for (let row = this.#rows - 2; row >= 0; row--) {
-            for (let col = 0; col < this.#cols; col++) {
-                let tile = this.#tileAt(row, col);
+        for (let y = this.#height - 2; y >= 0; y--) {
+            for (let x = 0; x < this.#width; x++) {
+                let tile = this.#getTileAt(x, y);
                 if (tile.isEmpty) {
                     continue;
                 }
                 
-                let holesBelow = this.#holesBelow(row, col);
+                let holesBelow = this.#holesBelow(x, y);
                 if (holesBelow > 0) {
-                    this.#tiles[row + holesBelow][col] = {
-                        sprite: tile.sprite,
-                        color: tile.color,
-                        isEmpty: false,
-                        row: row + holesBelow,
-                        col: col,
-                    }
+                    let otherTile = this.#getTileAt(x, y + holesBelow);
+                    otherTile.sprite = tile.sprite;
+                    otherTile.color = tile.color;
+                    otherTile.isEmpty = false;
+                    otherTile.x = x;
+                    otherTile.y = y + holesBelow;
+
                     tile.isEmpty = true;
                 }
             }
@@ -228,14 +261,14 @@ export class DungeonScene extends Phaser.Scene {
     #makeTilesFall() {
         let totalTiles = 0;
 
-        for (let row = this.#rows - 2; row >= 0; row--) {
-            for (let col = 0; col < this.#cols; col++) {
-                let tile = this.#tileAt(row, col);
+        for (let y = this.#height - 2; y >= 0; y--) {
+            for (let x = 0; x < this.#width; x++) {
+                let tile = this.#getTileAt(x, y);
                 if (tile.isEmpty) {
                     continue;
                 }
 
-                let newY = tile.row * TILE_SIZE + TILE_SIZE / 2;
+                let newY = tile.y * TILE_SIZE + TILE_SIZE / 2;
                 if (newY !== tile.sprite.y) {
                     let totalHoles = (newY - tile.sprite.y) / TILE_SIZE;
 
@@ -268,10 +301,10 @@ export class DungeonScene extends Phaser.Scene {
         }
     }
 
-    #holesBelow(row, col) {
+    #holesBelow(x, y) {
         let holes = 0;
-        for(let i = row + 1; i < this.#rows; i ++) {
-            if(this.#tileAt(i, col).isEmpty) {
+        for(let i = y + 1; i < this.#height; i ++) {
+            if(this.#getTileAt(x, i).isEmpty) {
                 holes++;
             }
         }
@@ -279,31 +312,31 @@ export class DungeonScene extends Phaser.Scene {
     }
 
     #addNewTiles() {
-        for(let col = 0; col < this.#cols; col++) {
-            let holes = this.#holesInCol(col);
+        for(let x = 0; x < this.#width; x++) {
+            let holes = this.#holesInCol(x);
             if (holes > 0) {
                 for (let i = 0; i < holes; i ++) {
                     // @TODO: Do not repeat this code
                     let randomFrameIndex = Phaser.Math.Between(0, 4);
-                    this.#tiles[i][col].color = randomFrameIndex;
-                    this.#tiles[i][col].sprite = this.#poolTiles.pop()
-                    this.#tiles[i][col].sprite.setFrame(randomFrameIndex);
-                    this.#tiles[i][col].sprite.visible = true;
-                    this.#tiles[i][col].sprite.x = TILE_SIZE * col + TILE_SIZE / 2;
-                    this.#tiles[i][col].sprite.y = TILE_SIZE / 2 - (holes - i) * TILE_SIZE;
-                    this.#tiles[i][col].row = i;
-                    this.#tiles[i][col].col = col;
-                    this.#tiles[i][col].sprite.alpha = 1;
-                    this.#tiles[i][col].isEmpty = false;
+                    this.#getTileAt(x, i).color = randomFrameIndex;
+                    this.#getTileAt(x, i).sprite = this.#poolTiles.pop()
+                    this.#getTileAt(x, i).sprite.setFrame(randomFrameIndex);
+                    this.#getTileAt(x, i).sprite.visible = true;
+                    this.#getTileAt(x, i).sprite.x = TILE_SIZE * x + TILE_SIZE / 2;
+                    this.#getTileAt(x, i).sprite.y = TILE_SIZE / 2 - (holes - i) * TILE_SIZE;
+                    this.#getTileAt(x, i).y = i;
+                    this.#getTileAt(x, i).x = x;
+                    this.#getTileAt(x, i).sprite.alpha = 1;
+                    this.#getTileAt(x, i).isEmpty = false;
                 }
             }
         }
     }
 
-    #holesInCol(col){
+    #holesInCol(x){
         let holes = 0;
-        for(let row = 0; row < this.#rows; row++) {
-            if(this.#tiles[row][col].isEmpty) {
+        for(let y = 0; y < this.#height; y++) {
+            if(this.#getTileAt(x, y).isEmpty) {
                 holes++;
             }
         }
@@ -311,28 +344,28 @@ export class DungeonScene extends Phaser.Scene {
     }
 
     #handleMatches() {
-        for (let col = 0; col < this.#cols; col++) {
+        for (let x = 0; x < this.#width; x++) {
             let colorStreak = 1;
             let currentColor = -1;
             let startStreak = 0;
             let colorToWatch = 0;
 
-            for (let row = 0; row < this.#rows; row++) {
-                colorToWatch = this.#tileAt(row, col).color;
+            for (let y = 0; y < this.#height; y++) {
+                colorToWatch = this.#getTileAt(x, y).color;
                 if(colorToWatch === currentColor){
                     colorStreak++;
                 }
                 // Another color or last row
-                if (colorToWatch !== currentColor || row === this.#rows - 1) {
-                    let endStreak = (colorToWatch === currentColor ? row : row - 1);
+                if (colorToWatch !== currentColor || y === this.#height - 1) {
+                    let endStreak = (colorToWatch === currentColor ? y : y - 1);
                     if (colorStreak >= 3) {
                         console.log("Streak Length = " + colorStreak + " :: Start = (" + startStreak + "," + endStreak + ") :: Color = " + currentColor);
 
                         for (let k = 0; k < colorStreak; k++) {
-                            this.#tiles[endStreak - k][startStreak].toRemove = true;
+                            this.#getTileAt(startStreak, endStreak - k).toRemove = true;
                         }
                     }
-                    startStreak = col;
+                    startStreak = x;
                     colorStreak = 1;
                     currentColor = colorToWatch;
                 }
