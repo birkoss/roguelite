@@ -83,8 +83,7 @@ export class DungeonScene extends Phaser.Scene {
                     // TODO: Make sure the total number of index is dynamic
                     let randomFrameIndex = Phaser.Math.Between(0, 4);
 
-                    tile.block.icon.setFrame(randomFrameIndex);
-                    tile.block.color = randomFrameIndex;
+                    tile.block.updateColor(randomFrameIndex);
                 } while(this.#isMatchAt(x, y));
             }
         }
@@ -380,8 +379,9 @@ export class DungeonScene extends Phaser.Scene {
                         continue;
                     }
                     tile.block = this.#blocksPooled.pop()
-                    tile.block.icon.setFrame(randomFrameIndex);
-                    tile.block.color = randomFrameIndex;
+
+                    tile.block.updateColor(randomFrameIndex);
+
                     tile.container.visible = true;
                     tile.container.x = TILE_SIZE * x + TILE_SIZE / 2;
                     tile.container.y = TILE_SIZE / 2 - (holes - i) * TILE_SIZE;

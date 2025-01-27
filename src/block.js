@@ -27,4 +27,14 @@ export class Block {
     set color(value) { this.#color = value; }
     set container(value) { this.#container = value; }
     set icon(value) { this.#icon = value; }
+
+    /**
+     * @param {number} newColor
+     */
+    updateColor(newColor) {
+        this.#color = newColor;
+        if (this.#icon) {
+            this.#icon.setFrame(newColor);
+        }
+    }
 }
