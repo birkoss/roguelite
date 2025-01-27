@@ -129,7 +129,7 @@ export class DungeonScene extends Phaser.Scene {
             if (otherTile === null) {
                 continue;
             }
-            if (tile.color === otherTile.color) {
+            if (tile.block.color === otherTile.block.color) {
                 matchesThreshold--;
             }
         }
@@ -238,13 +238,13 @@ export class DungeonScene extends Phaser.Scene {
                 if (tile.toRemove) {
                     totalTiles++;
                     this.tweens.add({
-                        targets: tile.container,
+                        targets: tile.block.container,
                         alpha: 0.5,
                         duration: 200,
                         callbackScope: this,
                         onComplete: () => {
                             totalTiles--;
-                            tile.container.visible = false;
+                            tile.block.container.visible = false;
                             this.#blocksPooled.push(tile.block);
                             if (totalTiles === 0) {
                                 // Move row, col for each remaining tile
@@ -295,13 +295,13 @@ export class DungeonScene extends Phaser.Scene {
                 }
 
                 let newY = tile.y * TILE_SIZE + TILE_SIZE / 2;
-                if (newY !== tile.container.y) {
-                    let totalHoles = (newY - tile.container.y) / TILE_SIZE;
+                if (newY !== tile.block.container.y) {
+                    let totalHoles = (newY - tile.block.container.y) / TILE_SIZE;
 
                     totalTiles++;
 
                     this.tweens.add({
-                        targets: tile.container,
+                        targets: tile.block.container,
                         y: newY,
                         duration: 100 * totalHoles,
                         callbackScope: this,
@@ -382,10 +382,10 @@ export class DungeonScene extends Phaser.Scene {
 
                     tile.block.updateColor(randomFrameIndex);
 
-                    tile.container.visible = true;
-                    tile.container.x = TILE_SIZE * x + TILE_SIZE / 2;
-                    tile.container.y = TILE_SIZE / 2 - (holes - i) * TILE_SIZE;
-                    tile.container.alpha = 1;
+                    tile.block.container.visible = true;
+                    tile.block.container.x = TILE_SIZE * x + TILE_SIZE / 2;
+                    tile.block.container.y = TILE_SIZE / 2 - (holes - i) * TILE_SIZE;
+                    tile.block.container.alpha = 1;
                     tile.block.background.setFrame(0);
                     tile.updateState({isEmpty: false});
                 }
@@ -403,7 +403,11 @@ export class DungeonScene extends Phaser.Scene {
             let colorToWatch = 0;
 
             for (let y = 0; y < this.#height; y++) {
-                colorToWatch = this.#getTileAt(x, y).color;
+                let tile = this.#getTileAt(x, y);
+                if (tile === null) {
+                    continue;
+                }
+                colorToWatch = tile.block.color;
                 if(colorToWatch === currentColor){
                     colorStreak++;
                 }

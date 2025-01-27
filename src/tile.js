@@ -32,11 +32,8 @@ export class Tile {
         this.#state = {isEmpty: false, toRemove: false};
     }
 
-    // TODO: Stop accessing the block directly (color and container)
     get block() { return this.#block; }
-    get color() { return this.#block.color; }
     get isEmpty() { return this.#state.isEmpty; }
-    get container() { return this.#block.container; }
     get toRemove() { return this.#state.toRemove; }
     get x() { return this.#position.x; }
     get y() { return this.#position.y; }
