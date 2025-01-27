@@ -11,29 +11,29 @@ export class DungeonScene extends Phaser.Scene {
     #width;
     /** @type {number} */
     #height;
-
     /** @type {Phaser.GameObjects.Container} */
     #container;
-    /** @type {boolean} */
-    #canSelect;
-
     /** @type {Tile[]} */
     #tiles;
 
-    #poolTiles;
+    /** @type {boolean} */
+    #canSelect;
     /** @type {Tile} */
     #selectedTile;
+
+    /** @type {Phaser.GameObjects.Sprite[]} */
+    #poolSprites;
 
     constructor() {
         super({
             key: SCENE_KEYS.DUNGEON_SCENE,
         });
+
+        this.#canSelect = true;
+        this.#selectedTile = null;
     }
 
     create() {
-        this.#canSelect = true;
-        this.#selectedTile = null;
-
         this.#createTiles(8, 10);
 
         this.input.on("pointerdown", this.#selectTile, this);
@@ -49,7 +49,7 @@ export class DungeonScene extends Phaser.Scene {
         this.#height = height;
 
         this.#tiles = [];
-        this.#poolTiles = [];
+        this.#poolSprites = [];
 
         this.#container = this.add.container(40, 100);
 
@@ -90,7 +90,6 @@ export class DungeonScene extends Phaser.Scene {
     }
 
     /**
-     * 
      * @returns {boolean}
      */
     #hasMatches() {
@@ -104,6 +103,11 @@ export class DungeonScene extends Phaser.Scene {
         return false;
     }
 
+    /**
+     * @param {number} x
+     * @param {number} y
+     * @returns {boolean}
+     */
     #isMatchAt(x, y) {
         // Only check vertical matches for now...
         let tile = this.#getTileAt(x, y);
@@ -142,6 +146,9 @@ export class DungeonScene extends Phaser.Scene {
         return this.#tiles[index];
     }
 
+    /**
+     * @param {Phaser.Input.Pointer} pointer 
+     */
     #selectTile(pointer) {
         if (!this.#canSelect) {
             return;
@@ -166,6 +173,9 @@ export class DungeonScene extends Phaser.Scene {
         }
     }
 
+    /**
+     * @param {Phaser.Input.Pointer} pointer 
+     */
     #unselectTile(pointer) {
         if (!this.#canSelect) {
             return;
@@ -208,6 +218,9 @@ export class DungeonScene extends Phaser.Scene {
         for (let y = 0; y < this.#height; y++) {
             for (let x = 0; x < this.#width; x++) {
                 let tile = this.#getTileAt(x, y);
+                if (tile === null) {
+                    continue;
+                }
 
                 if (tile.toRemove) {
                     totalTiles++;
@@ -219,7 +232,7 @@ export class DungeonScene extends Phaser.Scene {
                         onComplete: () => {
                             totalTiles--;
                             tile.sprite.visible = false;
-                            this.#poolTiles.push(tile.sprite);
+                            this.#poolSprites.push(tile.sprite);
                             if (totalTiles === 0) {
                                 // Move row, col for each remaining tile
                                 this.#moveExistingTiles();
@@ -231,7 +244,7 @@ export class DungeonScene extends Phaser.Scene {
                         }
                     });
 
-                    tile.updateState({isEmpty: true, toRemove: true});
+                    tile.updateState({isEmpty: true, toRemove: false});
                 }
             }
         }
@@ -241,6 +254,10 @@ export class DungeonScene extends Phaser.Scene {
         for (let y = this.#height - 2; y >= 0; y--) {
             for (let x = 0; x < this.#width; x++) {
                 let tile = this.#getTileAt(x, y);
+                if (tile === null) {
+                    continue;
+                }
+
                 if (tile.isEmpty) {
                     continue;
                 }
@@ -251,7 +268,6 @@ export class DungeonScene extends Phaser.Scene {
                     otherTile.sprite = tile.sprite;
                     otherTile.color = tile.color;
                     otherTile.updateState({isEmpty: false});
-                    otherTile.updatePosition(x, y + holesBelow);
 
                     tile.updateState({isEmpty: true});
                 }
@@ -262,9 +278,14 @@ export class DungeonScene extends Phaser.Scene {
     #makeTilesFall() {
         let totalTiles = 0;
 
-        for (let y = this.#height - 2; y >= 0; y--) {
+        for (let y = this.#height - 1; y >= 0; y--) {
             for (let x = 0; x < this.#width; x++) {
                 let tile = this.#getTileAt(x, y);
+
+                if (tile === null) {
+                    continue;
+                }
+
                 if (tile.isEmpty) {
                     continue;
                 }
@@ -278,7 +299,7 @@ export class DungeonScene extends Phaser.Scene {
                     this.tweens.add({
                         targets: tile.sprite,
                         y: newY,
-                        duration: 200 * totalHoles,
+                        duration: 100 * totalHoles,
                         callbackScope: this,
                             onComplete: () => {
                                 totalTiles--;
@@ -287,7 +308,7 @@ export class DungeonScene extends Phaser.Scene {
                                     if (this.#hasMatches()) {
                                         // Pause before removing the matches
                                         this.time.addEvent({
-                                            delay: 100,
+                                            delay: 200,
                                             callback: this.#handleMatches,
                                             callbackScope: this,
                                         });
@@ -302,10 +323,37 @@ export class DungeonScene extends Phaser.Scene {
         }
     }
 
+    /**
+     * @param {number} x 
+     * @param {number} y 
+     * @returns {number}
+     */
     #holesBelow(x, y) {
         let holes = 0;
-        for(let i = y + 1; i < this.#height; i ++) {
-            if(this.#getTileAt(x, i).isEmpty) {
+        for(let y2 = y + 1; y2 < this.#height; y2++) {
+            let tile = this.#getTileAt(x, y2);
+            if (tile === null) {
+                continue;
+            }
+            if (tile.isEmpty) {
+                holes++;
+            }
+        }
+        return holes;
+    }
+
+    /**
+     * @param {number} x 
+     * @returns {number}
+     */
+    #holesInCol(x) {
+        let holes = 0;
+        for (let y = 0; y < this.#height; y++) {
+            let tile = this.#getTileAt(x, y);
+            if (tile === null) {
+                continue;
+            }
+            if (tile.isEmpty) {
                 holes++;
             }
         }
@@ -325,31 +373,16 @@ export class DungeonScene extends Phaser.Scene {
                         continue;
                     }
                     tile.color = randomFrameIndex;
-                    tile.sprite = this.#poolTiles.pop()
+                    tile.sprite = this.#poolSprites.pop()
                     tile.sprite.setFrame(randomFrameIndex);
                     tile.sprite.visible = true;
                     tile.sprite.x = TILE_SIZE * x + TILE_SIZE / 2;
                     tile.sprite.y = TILE_SIZE / 2 - (holes - i) * TILE_SIZE;
-                    tile.updatePosition(x, i)
                     tile.sprite.alpha = 1;
                     tile.updateState({isEmpty: false});
                 }
             }
         }
-    }
-
-    #holesInCol(x) {
-        let holes = 0;
-        for (let y = 0; y < this.#height; y++) {
-            let tile = this.#getTileAt(x, y);
-            if (tile === null) {
-                continue;
-            }
-            if (tile.isEmpty) {
-                holes++;
-            }
-        }
-        return holes;
     }
 
     #handleMatches() {
@@ -376,6 +409,7 @@ export class DungeonScene extends Phaser.Scene {
                                 continue;
                             }
                             tile.updateState({toRemove: true});
+                            // tile.sprite.setTint(0xff0000);
                         }
                     }
                     startStreak = x;
