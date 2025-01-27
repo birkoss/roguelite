@@ -61,8 +61,6 @@ export class DungeonScene extends Phaser.Scene {
 
         for (let y = 0; y < height; y++) {
             for(let x = 0; x < width; x++) {
-                let index = (y * width) + x;
-
                 let sprite = this.add.sprite(TILE_SIZE * x + TILE_SIZE/2, TILE_SIZE * y + TILE_SIZE/2, TILE_ASSET_KEYS.TILE);
                 this.#container.add(sprite);
 
@@ -72,8 +70,13 @@ export class DungeonScene extends Phaser.Scene {
                     let randomFrameIndex = Phaser.Math.Between(0, 4);
                     sprite.setFrame(randomFrameIndex);
 
-                    this.#getTileAt(x, y).color = randomFrameIndex;
-                    this.#getTileAt(x, y).sprite = sprite;
+                    let tile = this.#getTileAt(x, y);
+                    if (tile === null) {
+                        continue;
+                    }
+
+                    tile.color = randomFrameIndex;
+                    tile.sprite = sprite;
                 } while(this.#isMatchAt(x, y));
             }
         }
@@ -83,7 +86,7 @@ export class DungeonScene extends Phaser.Scene {
         .fillStyle(0x000000, 0)
         .fillRect(this.#container.x, this.#container.y, this.#container.getBounds().width, this.#container.getBounds().height);
 
-        this.#container.mask = new Phaser.Display.Masks.GeometryMask(this, mask);
+        // this.#container.mask = new Phaser.Display.Masks.GeometryMask(this, mask);
     }
 
     /**
@@ -172,11 +175,6 @@ export class DungeonScene extends Phaser.Scene {
         }
         
         this.#selectedTile.sprite.setDepth(0);
-
-        // Unhighlight the entire row)
-        for (let i = 0; i < this.#width; i++) {
-            this.#getTileAt(i, this.#selectedTile.y).sprite.setScale(1);
-        }
         
         let x = Math.floor((pointer.x - this.#container.x) / TILE_SIZE);
         let y = Math.floor((pointer.y - this.#container.y) / TILE_SIZE);
@@ -191,7 +189,12 @@ export class DungeonScene extends Phaser.Scene {
 
             // Delete entire selected row
             for (let i = 0; i < this.#width; i++) {
-                this.#getTileAt(i, this.#selectedTile.y).toRemove = true;
+                let rowTile = this.#getTileAt(i, this.#selectedTile.y);
+                if (rowTile === null) {
+                    continue;
+                }
+                rowTile.sprite.setScale(1);
+                rowTile.updateState({toRemove: true});
             }
             this.#destroyTiles();
         }
@@ -228,8 +231,7 @@ export class DungeonScene extends Phaser.Scene {
                         }
                     });
 
-                    tile.isEmpty = true;
-                    tile.toRemove = false;
+                    tile.updateState({isEmpty: true, toRemove: true});
                 }
             }
         }
@@ -248,11 +250,10 @@ export class DungeonScene extends Phaser.Scene {
                     let otherTile = this.#getTileAt(x, y + holesBelow);
                     otherTile.sprite = tile.sprite;
                     otherTile.color = tile.color;
-                    otherTile.isEmpty = false;
-                    otherTile.x = x;
-                    otherTile.y = y + holesBelow;
+                    otherTile.updateState({isEmpty: false});
+                    otherTile.updatePosition(x, y + holesBelow);
 
-                    tile.isEmpty = true;
+                    tile.updateState({isEmpty: true});
                 }
             }
         }
@@ -318,25 +319,33 @@ export class DungeonScene extends Phaser.Scene {
                 for (let i = 0; i < holes; i ++) {
                     // @TODO: Do not repeat this code
                     let randomFrameIndex = Phaser.Math.Between(0, 4);
-                    this.#getTileAt(x, i).color = randomFrameIndex;
-                    this.#getTileAt(x, i).sprite = this.#poolTiles.pop()
-                    this.#getTileAt(x, i).sprite.setFrame(randomFrameIndex);
-                    this.#getTileAt(x, i).sprite.visible = true;
-                    this.#getTileAt(x, i).sprite.x = TILE_SIZE * x + TILE_SIZE / 2;
-                    this.#getTileAt(x, i).sprite.y = TILE_SIZE / 2 - (holes - i) * TILE_SIZE;
-                    this.#getTileAt(x, i).y = i;
-                    this.#getTileAt(x, i).x = x;
-                    this.#getTileAt(x, i).sprite.alpha = 1;
-                    this.#getTileAt(x, i).isEmpty = false;
+
+                    let tile = this.#getTileAt(x, i);
+                    if (tile === null) {
+                        continue;
+                    }
+                    tile.color = randomFrameIndex;
+                    tile.sprite = this.#poolTiles.pop()
+                    tile.sprite.setFrame(randomFrameIndex);
+                    tile.sprite.visible = true;
+                    tile.sprite.x = TILE_SIZE * x + TILE_SIZE / 2;
+                    tile.sprite.y = TILE_SIZE / 2 - (holes - i) * TILE_SIZE;
+                    tile.updatePosition(x, i)
+                    tile.sprite.alpha = 1;
+                    tile.updateState({isEmpty: false});
                 }
             }
         }
     }
 
-    #holesInCol(x){
+    #holesInCol(x) {
         let holes = 0;
-        for(let y = 0; y < this.#height; y++) {
-            if(this.#getTileAt(x, y).isEmpty) {
+        for (let y = 0; y < this.#height; y++) {
+            let tile = this.#getTileAt(x, y);
+            if (tile === null) {
+                continue;
+            }
+            if (tile.isEmpty) {
                 holes++;
             }
         }
@@ -362,7 +371,11 @@ export class DungeonScene extends Phaser.Scene {
                         console.log("Streak Length = " + colorStreak + " :: Start = (" + startStreak + "," + endStreak + ") :: Color = " + currentColor);
 
                         for (let k = 0; k < colorStreak; k++) {
-                            this.#getTileAt(startStreak, endStreak - k).toRemove = true;
+                            let tile = this.#getTileAt(x, endStreak - k);
+                            if (tile === null) {
+                                continue;
+                            }
+                            tile.updateState({toRemove: true});
                         }
                     }
                     startStreak = x;
