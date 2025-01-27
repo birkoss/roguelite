@@ -23,11 +23,12 @@ export class Tile {
     /**
      * @param {number} x - The x coordinate of the tile on the grid
      * @param {number} y - The y coordinate of the tile on the grid
+     * @param {Block} block - The block that the tile contains
      */
-    constructor(x, y) {
+    constructor(x, y, block) {
         this.#position = {x, y};
 
-        this.#block = new Block();
+        this.#block = block;
 
         this.#state = {isEmpty: false, toRemove: false};
     }

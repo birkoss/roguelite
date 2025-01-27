@@ -10,19 +10,18 @@ export class Block {
     /** @type {Phaser.GameObjects.Sprite} */
     #icon;
 
-    constructor() {
+    constructor(container, background, icon) {
         this.#color = -1;
+
+        this.#container = container;
+        this.#background = background;
+        this.#icon = icon;
     }
 
     get background() { return this.#background; }
     get color() { return this.#color; }
     get icon() { return this.#icon; }
     get container() { return this.#container; }
-
-    // TODO: Move to a create method (pass in scene) and remove those setters
-    set background(value) { this.#background = value; }
-    set container(value) { this.#container = value; }
-    set icon(value) { this.#icon = value; }
 
     /**
      * @param {number} newColor

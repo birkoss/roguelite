@@ -57,10 +57,21 @@ export class DungeonScene extends Phaser.Scene {
         // Create the tiles and blocks
         for (let y = 0; y < height; y++) {
             for(let x = 0; x < width; x++) {
-                this.#tiles.push(new Tile(x, y));
+                let container = this.add.container(TILE_SIZE * x + TILE_SIZE/2, TILE_SIZE * y + TILE_SIZE/2);
+                let background = this.add.sprite(0, 0, TILE_ASSET_KEYS.TILE);
+                container.add(background);
+                let icon = this.add.sprite(0, 0, TILE_ASSET_KEYS.ICON);
+                container.add(icon);
+                this.#container.add(container);
+
+                let tile = new Tile(x, y, new Block(container, background, icon));
+                this.#tiles.push(tile);
             }
         }
 
+        
+
+        // Create the block background and icon
         for (let y = 0; y < height; y++) {
             for(let x = 0; x < width; x++) {
                 let tile = this.#getTileAt(x, y);
@@ -68,21 +79,10 @@ export class DungeonScene extends Phaser.Scene {
                     continue;
                 }
 
-                tile.block.container = this.add.container(TILE_SIZE * x + TILE_SIZE/2, TILE_SIZE * y + TILE_SIZE/2);
-                
-                tile.block.background = this.add.sprite(0, 0, TILE_ASSET_KEYS.TILE);
-                tile.block.container.add(tile.block.background);
-
-                tile.block.icon = this.add.sprite(0, 0, TILE_ASSET_KEYS.ICON);
-                tile.block.container.add(tile.block.icon);
-
-                this.#container.add(tile.block.container);
-
                 // TODO: Check to make sure it's not an infinite loop
                 do {
                     // TODO: Make sure the total number of index is dynamic
                     let randomFrameIndex = Phaser.Math.Between(0, 4);
-
                     tile.block.updateColor(randomFrameIndex);
                 } while(this.#isMatchAt(x, y));
             }
@@ -275,7 +275,6 @@ export class DungeonScene extends Phaser.Scene {
                 if (holesBelow > 0) {
                     let otherTile = this.#getTileAt(x, y + holesBelow);
                     otherTile.block = tile.block;
-                    // otherTile.block.color = tile.block.color;
                     otherTile.updateState({isEmpty: false});
 
                     tile.updateState({isEmpty: true});
@@ -407,6 +406,7 @@ export class DungeonScene extends Phaser.Scene {
                 if (tile === null) {
                     continue;
                 }
+
                 colorToWatch = tile.block.color;
                 if(colorToWatch === currentColor){
                     colorStreak++;
