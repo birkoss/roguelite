@@ -9,9 +9,12 @@ export class Block {
     #background;
     /** @type {Phaser.GameObjects.Sprite} */
     #icon;
+    /** @type {number} */
+    #value;
 
     constructor(container, background, icon) {
         this.#color = -1;
+        this.#value = 1;
 
         this.#container = container;
         this.#background = background;
@@ -20,10 +23,9 @@ export class Block {
 
     get background() { return this.#background; }
     get color() { return this.#color; }
-    get icon() { return this.#icon; }
     get container() { return this.#container; }
-
-
+    get icon() { return this.#icon; }
+    get value() { return this.#value; }
 
     highlight() {
         this.#background.setFrame(1);
