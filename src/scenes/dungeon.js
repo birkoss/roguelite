@@ -79,10 +79,12 @@ export class DungeonScene extends Phaser.Scene {
                     continue;
                 }
 
-                // TODO: Check to make sure it's not an infinite loop
+                let maxTries = 10;
                 do {
+                    maxTries--;
                     tile.block.updateColor(this.#generateRandomColor());
-                } while(this.#isMatchAt(x, y));
+                } while(this.#isMatchAt(x, y) && maxTries > 0);
+                // TODO: Warn the player if maxTries === 0 (or retry)
             }
         }
 
