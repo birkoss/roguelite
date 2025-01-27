@@ -1,5 +1,3 @@
-import Phaser from "./lib/phaser.js";
-
 import { Block } from "./block.js";
 
 /**

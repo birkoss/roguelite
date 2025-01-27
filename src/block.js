@@ -5,13 +5,9 @@ export class Block {
     #color;
     /** @type {Phaser.GameObjects.Container} */
     #container;
-    /**
-     * @type {Phaser.GameObjects.Sprite}
-     */
+    /** @type {Phaser.GameObjects.Sprite} */
     #background;
-    /**
-     * @type {Phaser.GameObjects.Sprite}
-     */
+    /** @type {Phaser.GameObjects.Sprite} */
     #icon;
 
     constructor() {
@@ -23,8 +19,8 @@ export class Block {
     get icon() { return this.#icon; }
     get container() { return this.#container; }
 
+    // TODO: Move to a create method (pass in scene) and remove those setters
     set background(value) { this.#background = value; }
-    set color(value) { this.#color = value; }
     set container(value) { this.#container = value; }
     set icon(value) { this.#icon = value; }
 
