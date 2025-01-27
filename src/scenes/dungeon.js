@@ -185,16 +185,21 @@ export class DungeonScene extends Phaser.Scene {
         }
         
         this.#selectedTile.sprite.setDepth(0);
-        
+        for (let i = 0; i < this.#width; i++) {
+            let rowTile = this.#getTileAt(i, this.#selectedTile.y);
+            if (rowTile === null) {
+                continue;
+            }
+            rowTile.sprite.setScale(1);
+        }
+
+
         let x = Math.floor((pointer.x - this.#container.x) / TILE_SIZE);
         let y = Math.floor((pointer.y - this.#container.y) / TILE_SIZE);
 
         let tile = this.#getTileAt(x, y);
-        if (tile === null) {
-            return;
-        }
 
-        if (tile === this.#selectedTile) {
+        if (tile !== null && tile === this.#selectedTile) {
             this.#canSelect = false;
 
             // Delete entire selected row
@@ -409,7 +414,6 @@ export class DungeonScene extends Phaser.Scene {
                                 continue;
                             }
                             tile.updateState({toRemove: true});
-                            // tile.sprite.setTint(0xff0000);
                         }
                     }
                     startStreak = x;
