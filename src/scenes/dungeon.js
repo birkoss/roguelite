@@ -7,6 +7,13 @@ import { Block } from "../block.js";
 
 const TILE_SIZE = 40;   // 40
 
+/**
+ * @typedef {Object} Streak
+ * @property {number} length
+ * @property {number} color
+ * @property {Tile[]} tiles
+ */
+
 export class DungeonScene extends Phaser.Scene {
     /** @type {number} */
     #width;
@@ -231,6 +238,12 @@ export class DungeonScene extends Phaser.Scene {
         this.#selectedTile = null;
     }
 
+    /**
+     * Destroy the tiles that are marked for removal
+     * - Moves the tiles above the removed tiles down
+     * - Adds new tiles to the top of the grid
+     * - Tweens the tiles to their new positions
+     */
     #destroyTiles() {
         let totalTiles = 0;
 
@@ -269,6 +282,9 @@ export class DungeonScene extends Phaser.Scene {
         }
     }
 
+    /**
+     * Move the existing tiles down to fill in the holes
+     */
     #moveExistingTiles() {
         for (let y = this.#height - 2; y >= 0; y--) {
             for (let x = 0; x < this.#width; x++) {
@@ -289,6 +305,9 @@ export class DungeonScene extends Phaser.Scene {
         }
     }
 
+    /**
+     * Tween the tiles to fall into their new positions
+     */
     #makeTilesFall() {
         let totalTiles = 0;
 
@@ -352,6 +371,9 @@ export class DungeonScene extends Phaser.Scene {
         return holes;
     }
 
+    /**
+     * Add new tiles to the top of the grid from the block pool
+     */
     #addNewTiles() {
         for(let x = 0; x < this.#width; x++) {
             let holes = this.#getHolesBelow(x);
@@ -377,6 +399,10 @@ export class DungeonScene extends Phaser.Scene {
         }
     }
 
+    /**
+     * Handle the matches on the board
+     * - Find streaks of 3 or more tiles of the same color
+     */
     #handleMatches() {
         let streaks = [];
 
@@ -426,12 +452,14 @@ export class DungeonScene extends Phaser.Scene {
     }
 
     /**
-     
+     * Remove the tiles from the streaks
+     * @param {Streak[]} streaks
      */
     #removeMatches(streaks) {
         let totalTiles = 0;
 
         streaks.forEach(singleStreak => {
+            console.log(singleStreak);
             singleStreak.tiles.forEach(tile => {
                 totalTiles++;
                 tile.block.highlight();
