@@ -6,14 +6,17 @@ import { TILE_ASSET_KEYS } from "../keys/asset.js";
 const TILE_SIZE = 40;
 
 export class DungeonScene extends Phaser.Scene {
+    /** @type {number} */
+    #rows;
+    /** @type {number} */
+    #cols;
+    /** @type {Phaser.GameObjects.Container} */
+    #container;
+    /** @type {boolean} */
+    #canSelect;
 
     #tiles;
     #poolTiles;
-    #rows;
-    #cols;
-    #container;
-
-    #canSelect;
     #selectedTile;
 
     constructor() {
@@ -32,9 +35,11 @@ export class DungeonScene extends Phaser.Scene {
         this.input.on("pointerup", this.#unselectTile, this);
     }
 
-    update() {
-    }
-
+    /**
+     * 
+     * @param {number} cols 
+     * @param {number} rows 
+     */
     #createTiles(cols, rows) {
         this.#rows = rows;
         this.#cols = cols;
@@ -66,15 +71,18 @@ export class DungeonScene extends Phaser.Scene {
             }
         }
 
-        /*
-    const mask = this.make.graphics({add:false})
-      .fillStyle(1000000, 0.5)
-      .fillCircle(0, 0, 200);
+        // Create a mask for the container (Hide newly added tiles)
+        const mask = this.add.graphics()
+        .fillStyle(0x000000, 0)
+        .fillRect(this.#container.x, this.#container.y, this.#container.getBounds().width, this.#container.getBounds().height);
 
-    container.mask = new Phaser.Display.Masks.GeometryMask(this, mask);
-        */
+        this.#container.mask = new Phaser.Display.Masks.GeometryMask(this, mask);
     }
 
+    /**
+     * 
+     * @returns {boolean}
+     */
     #hasMatches() {
         for (let row = 0; row < this.#rows; row++) {
             for (let col = 0; col < this.#cols; col++) {
@@ -271,13 +279,10 @@ export class DungeonScene extends Phaser.Scene {
     }
 
     #addNewTiles() {
-        let totalTiles = 0;
-
         for(let col = 0; col < this.#cols; col++) {
             let holes = this.#holesInCol(col);
             if (holes > 0) {
                 for (let i = 0; i < holes; i ++) {
-                    totalTiles++;
                     // @TODO: Do not repeat this code
                     let randomFrameIndex = Phaser.Math.Between(0, 4);
                     this.#tiles[i][col].color = randomFrameIndex;
@@ -290,29 +295,6 @@ export class DungeonScene extends Phaser.Scene {
                     this.#tiles[i][col].col = col;
                     this.#tiles[i][col].sprite.alpha = 1;
                     this.#tiles[i][col].isEmpty = false;
-
-                    // this.tweens.add({
-                    //     targets: this.#tiles[i][col].sprite,
-                    //     y: TILE_SIZE * i + TILE_SIZE / 2,
-                    //     duration: 200 * holes,
-                    //     callbackScope: this,
-                    //     onComplete: () => {
-                    //         totalTiles--;
-
-                    //         if (totalTiles === 0) {
-                    //             if (this.#hasMatches()) {
-                    //                 // Pause before removing the matches
-                    //                 this.time.addEvent({
-                    //                     delay: 200,
-                    //                     callback: this.#handleMatches,
-                    //                     callbackScope: this,
-                    //                 });
-                    //             } else {
-                    //                 this.#canSelect = true;
-                    //             }
-                    //         }
-                    //     }
-                    // });
                 }
             }
         }
