@@ -15,6 +15,10 @@ export class PreloadScene extends Phaser.Scene {
             frameWidth: 40,
             frameHeight: 40,
         });
+        this.load.spritesheet(TILE_ASSET_KEYS.ICON, 'assets/tilesets/icon.png', {
+            frameWidth: 28,
+            frameHeight: 28,
+        });
     }
 
     create() {

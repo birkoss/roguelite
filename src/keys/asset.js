@@ -1,5 +1,6 @@
 export const TILE_ASSET_KEYS = Object.freeze({
     TILE: 'TILE_ASSET_KEYS.TILE',
+    ICON: 'TILE_ASSET_KEYS.ICON',
 });
 
 export const DUNGEON_ASSET_KEYS = Object.freeze({

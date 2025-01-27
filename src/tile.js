@@ -1,5 +1,7 @@
 import Phaser from "./lib/phaser.js";
 
+import { Block } from "./block.js";
+
 /**
  * @typedef {Object} TilePosition
  * @property {number} x
@@ -17,35 +19,32 @@ export class Tile {
     #position;
     /** @type {TileState} */
     #state;
-    /** @type {number} */
-    #color;
-    /** @type {Phaser.GameObjects.Sprite} */
-    #sprite;
+
+    /** @type {Block} */
+    #block;
 
     /**
      * @param {number} x 
      * @param {number} y 
-     * @param {number} color 
-     * @param {Phaser.GameObjects.Sprite} sprite 
      */
-    constructor(x, y, color, sprite) {
+    constructor(x, y) {
         this.updatePosition(x, y);
 
-        this.#color = color;
-        this.#sprite = sprite;
+        this.#block = new Block();
 
         this.#state = {isEmpty: false, toRemove: false};
     }
 
-    get color() { return this.#color; }
+    get block() { return this.#block; }
+    get color() { return this.#block.color; }
     get isEmpty() { return this.#state.isEmpty; }
-    get sprite() { return this.#sprite; }
+    get container() { return this.#block.container; }
     get toRemove() { return this.#state.toRemove; }
     get x() { return this.#position.x; }
     get y() { return this.#position.y; }
 
-    set color(value) { this.#color = value; }
-    set sprite(value) { this.#sprite = value; }
+    set block(value) { this.#block = value; }
+    set color(value) { this.#block.color = value; }
 
     /**
      * @param {number} x 

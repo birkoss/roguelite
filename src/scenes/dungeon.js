@@ -3,8 +3,9 @@ import Phaser from "../lib/phaser.js";
 import { SCENE_KEYS } from "../keys/scene.js";
 import { TILE_ASSET_KEYS } from "../keys/asset.js";
 import { Tile } from "../tile.js";
+import { Block } from "../block.js";
 
-const TILE_SIZE = 40;
+const TILE_SIZE = 40;   // 40
 
 export class DungeonScene extends Phaser.Scene {
     /** @type {number} */
@@ -21,8 +22,8 @@ export class DungeonScene extends Phaser.Scene {
     /** @type {Tile} */
     #selectedTile;
 
-    /** @type {Phaser.GameObjects.Sprite[]} */
-    #poolSprites;
+    /** @type {Block[]} */
+    #blocksPooled;
 
     constructor() {
         super({
@@ -49,34 +50,41 @@ export class DungeonScene extends Phaser.Scene {
         this.#height = height;
 
         this.#tiles = [];
-        this.#poolSprites = [];
+        this.#blocksPooled = [];
 
         this.#container = this.add.container(40, 100);
 
+        // Create the tiles and blocks
         for (let y = 0; y < height; y++) {
             for(let x = 0; x < width; x++) {
-                this.#tiles.push(new Tile(x, y, -1, null));
+                this.#tiles.push(new Tile(x, y));
             }
         }
 
         for (let y = 0; y < height; y++) {
             for(let x = 0; x < width; x++) {
-                let sprite = this.add.sprite(TILE_SIZE * x + TILE_SIZE/2, TILE_SIZE * y + TILE_SIZE/2, TILE_ASSET_KEYS.TILE);
-                this.#container.add(sprite);
+                let tile = this.#getTileAt(x, y);
+                if (tile === null) {
+                    continue;
+                }
+
+                tile.block.container = this.add.container(TILE_SIZE * x + TILE_SIZE/2, TILE_SIZE * y + TILE_SIZE/2);
+                
+                tile.block.background = this.add.sprite(0, 0, TILE_ASSET_KEYS.TILE);
+                tile.block.container.add(tile.block.background);
+
+                tile.block.icon = this.add.sprite(0, 0, TILE_ASSET_KEYS.ICON);
+                tile.block.container.add(tile.block.icon);
+
+                this.#container.add(tile.block.container);
 
                 // @TODO: Check to make sure it's not an infinite loop
                 do {
                     // @TODO: Make sure the total number of index is dynamic
                     let randomFrameIndex = Phaser.Math.Between(0, 4);
-                    sprite.setFrame(randomFrameIndex);
 
-                    let tile = this.#getTileAt(x, y);
-                    if (tile === null) {
-                        continue;
-                    }
-
-                    tile.color = randomFrameIndex;
-                    tile.sprite = sprite;
+                    tile.block.icon.setFrame(randomFrameIndex);
+                    tile.block.color = randomFrameIndex;
                 } while(this.#isMatchAt(x, y));
             }
         }
@@ -163,12 +171,15 @@ export class DungeonScene extends Phaser.Scene {
         }
 
         if (this.#selectedTile === null) {
-            tile.sprite.setDepth(1);
             this.#selectedTile = tile;
 
             // Highlight the entire row)
             for (let i = 0; i < this.#width; i++) {
-                this.#getTileAt(i, y).sprite.setScale(1.2);
+                let otherTile = this.#getTileAt(i, y);
+                if (otherTile === null) {
+                    continue;
+                }
+                otherTile.block.background.setFrame(1);
             }
         }
     }
@@ -184,13 +195,12 @@ export class DungeonScene extends Phaser.Scene {
             return;
         }
         
-        this.#selectedTile.sprite.setDepth(0);
         for (let i = 0; i < this.#width; i++) {
             let rowTile = this.#getTileAt(i, this.#selectedTile.y);
             if (rowTile === null) {
                 continue;
             }
-            rowTile.sprite.setScale(1);
+            rowTile.block.background.setFrame(0);
         }
 
 
@@ -208,7 +218,6 @@ export class DungeonScene extends Phaser.Scene {
                 if (rowTile === null) {
                     continue;
                 }
-                rowTile.sprite.setScale(1);
                 rowTile.updateState({toRemove: true});
             }
             this.#destroyTiles();
@@ -230,14 +239,14 @@ export class DungeonScene extends Phaser.Scene {
                 if (tile.toRemove) {
                     totalTiles++;
                     this.tweens.add({
-                        targets: tile.sprite,
+                        targets: tile.container,
                         alpha: 0.5,
                         duration: 200,
                         callbackScope: this,
                         onComplete: () => {
                             totalTiles--;
-                            tile.sprite.visible = false;
-                            this.#poolSprites.push(tile.sprite);
+                            tile.container.visible = false;
+                            this.#blocksPooled.push(tile.block);
                             if (totalTiles === 0) {
                                 // Move row, col for each remaining tile
                                 this.#moveExistingTiles();
@@ -270,8 +279,8 @@ export class DungeonScene extends Phaser.Scene {
                 let holesBelow = this.#holesBelow(x, y);
                 if (holesBelow > 0) {
                     let otherTile = this.#getTileAt(x, y + holesBelow);
-                    otherTile.sprite = tile.sprite;
-                    otherTile.color = tile.color;
+                    otherTile.block = tile.block;
+                    // otherTile.block.color = tile.block.color;
                     otherTile.updateState({isEmpty: false});
 
                     tile.updateState({isEmpty: true});
@@ -296,13 +305,13 @@ export class DungeonScene extends Phaser.Scene {
                 }
 
                 let newY = tile.y * TILE_SIZE + TILE_SIZE / 2;
-                if (newY !== tile.sprite.y) {
-                    let totalHoles = (newY - tile.sprite.y) / TILE_SIZE;
+                if (newY !== tile.container.y) {
+                    let totalHoles = (newY - tile.container.y) / TILE_SIZE;
 
                     totalTiles++;
 
                     this.tweens.add({
-                        targets: tile.sprite,
+                        targets: tile.container,
                         y: newY,
                         duration: 100 * totalHoles,
                         callbackScope: this,
@@ -379,14 +388,14 @@ export class DungeonScene extends Phaser.Scene {
                     if (tile === null) {
                         continue;
                     }
-                    tile.color = randomFrameIndex;
-                    tile.sprite = this.#poolSprites.pop()
-                    tile.sprite.setFrame(randomFrameIndex);
-                    tile.sprite.visible = true;
-                    tile.sprite.x = TILE_SIZE * x + TILE_SIZE / 2;
-                    tile.sprite.y = TILE_SIZE / 2 - (holes - i) * TILE_SIZE;
-                    tile.sprite.alpha = 1;
-                    tile.sprite.setScale(1);
+                    tile.block = this.#blocksPooled.pop()
+                    tile.block.icon.setFrame(randomFrameIndex);
+                    tile.block.color = randomFrameIndex;
+                    tile.container.visible = true;
+                    tile.container.x = TILE_SIZE * x + TILE_SIZE / 2;
+                    tile.container.y = TILE_SIZE / 2 - (holes - i) * TILE_SIZE;
+                    tile.container.alpha = 1;
+                    tile.block.background.setFrame(0);
                     tile.updateState({isEmpty: false});
                 }
             }
@@ -445,13 +454,11 @@ export class DungeonScene extends Phaser.Scene {
         streaks.forEach(singleStreak => {
             singleStreak.tiles.forEach(tile => {
                 totalTiles++;
-                this.tweens.add({
-                    targets: tile.sprite,
-                    scaleX: 1.2,
-                    scaleY: 1.2,
-                    duration: 100,
-                    callbackScope: this,
-                    onComplete: () => {
+                tile.block.background.setFrame(1);
+
+                this.time.addEvent({
+                    delay: 200,
+                    callback: () => {
                         totalTiles--;
 
                         tile.updateState({toRemove: true});
@@ -461,6 +468,23 @@ export class DungeonScene extends Phaser.Scene {
                         }
                     }
                 });
+
+                // this.tweens.add({
+                //     targets: tile.sprite,
+                //     scaleX: 1.2,
+                //     scaleY: 1.2,
+                //     duration: 100,
+                //     callbackScope: this,
+                //     onComplete: () => {
+                //         totalTiles--;
+
+                //         tile.updateState({toRemove: true});
+
+                //         if (totalTiles === 0) {
+                //             this.#destroyTiles();
+                //         }
+                //     }
+                // });
             });
         });
     }
