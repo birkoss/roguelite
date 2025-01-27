@@ -11,6 +11,7 @@ export class DungeonScene extends Phaser.Scene {
     #poolTiles;
     #rows;
     #cols;
+    #container;
 
     #canSelect;
     #selectedTile;
@@ -41,10 +42,13 @@ export class DungeonScene extends Phaser.Scene {
         this.#tiles = [];
         this.#poolTiles = [];
 
+        this.#container = this.add.container(40, 100);
+
         for (let row = 0; row < rows; row++) {
             this.#tiles[row] = [];
             for(let col = 0; col < cols; col++) {
                 let tile = this.add.sprite(TILE_SIZE * col + TILE_SIZE/2, TILE_SIZE * row + TILE_SIZE/2, TILE_ASSET_KEYS.TILE);
+                this.#container.add(tile);
 
                 do {
                     // @TODO: Make sure the total number of index is dynamic
@@ -61,6 +65,14 @@ export class DungeonScene extends Phaser.Scene {
                 } while(this.#isMatchAt(row, col));
             }
         }
+
+        /*
+    const mask = this.make.graphics({add:false})
+      .fillStyle(1000000, 0.5)
+      .fillCircle(0, 0, 200);
+
+    container.mask = new Phaser.Display.Masks.GeometryMask(this, mask);
+        */
     }
 
     #hasMatches() {
@@ -91,8 +103,8 @@ export class DungeonScene extends Phaser.Scene {
             return;
         }
 
-        let row = Math.floor(pointer.y / TILE_SIZE);
-        let col = Math.floor(pointer.x / TILE_SIZE);
+        let row = Math.floor((pointer.y - this.#container.y) / TILE_SIZE);
+        let col = Math.floor((pointer.x - this.#container.x) / TILE_SIZE);
 
         let tile = this.#tileAt(row, col);
         if (tile === -1) {
@@ -125,8 +137,8 @@ export class DungeonScene extends Phaser.Scene {
             this.#tileAt(this.#selectedTile.row, i).sprite.setScale(1);
         }
         
-        let row = Math.floor(pointer.y / TILE_SIZE);
-        let col = Math.floor(pointer.x / TILE_SIZE);
+        let row = Math.floor((pointer.y - this.#container.y) / TILE_SIZE);
+        let col = Math.floor((pointer.x - this.#container.x) / TILE_SIZE);
 
         let tile = this.#tileAt(row, col);
         if (tile === -1) {
@@ -165,8 +177,12 @@ export class DungeonScene extends Phaser.Scene {
                             tile.sprite.visible = false;
                             this.#poolTiles.push(tile.sprite);
                             if (totalTiles === 0) {
+                                // Move row, col for each remaining tile
+                                this.#moveExistingTiles();
+                                // Place new tile on top
+                                this.#addNewTiles();
+                                // Tween each sprite to its new position
                                 this.#makeTilesFall();
-                                this.#replenishField();
                             }
                         }
                     });
@@ -178,7 +194,7 @@ export class DungeonScene extends Phaser.Scene {
         }
     }
 
-    #makeTilesFall() {
+    #moveExistingTiles() {
         for (let row = this.#rows - 2; row >= 0; row--) {
             for (let col = 0; col < this.#cols; col++) {
                 let tile = this.#tileAt(row, col);
@@ -188,11 +204,6 @@ export class DungeonScene extends Phaser.Scene {
                 
                 let holesBelow = this.#holesBelow(row, col);
                 if (holesBelow > 0) {
-                    this.tweens.add({
-                        targets: tile.sprite,
-                        y: tile.sprite.y + holesBelow * TILE_SIZE,
-                        duration: 200 * holesBelow
-                    });
                     this.#tiles[row + holesBelow][col] = {
                         sprite: tile.sprite,
                         color: tile.color,
@@ -201,6 +212,49 @@ export class DungeonScene extends Phaser.Scene {
                         col: col,
                     }
                     tile.isEmpty = true;
+                }
+            }
+        }
+    }
+
+    #makeTilesFall() {
+        let totalTiles = 0;
+
+        for (let row = this.#rows - 2; row >= 0; row--) {
+            for (let col = 0; col < this.#cols; col++) {
+                let tile = this.#tileAt(row, col);
+                if (tile.isEmpty) {
+                    continue;
+                }
+
+                let newY = tile.row * TILE_SIZE + TILE_SIZE / 2;
+                if (newY !== tile.sprite.y) {
+                    let totalHoles = (newY - tile.sprite.y) / TILE_SIZE;
+
+                    totalTiles++;
+
+                    this.tweens.add({
+                        targets: tile.sprite,
+                        y: newY,
+                        duration: 200 * totalHoles,
+                        callbackScope: this,
+                            onComplete: () => {
+                                totalTiles--;
+    
+                                if (totalTiles === 0) {
+                                    if (this.#hasMatches()) {
+                                        // Pause before removing the matches
+                                        this.time.addEvent({
+                                            delay: 100,
+                                            callback: this.#handleMatches,
+                                            callbackScope: this,
+                                        });
+                                    } else {
+                                        this.#canSelect = true;
+                                    }
+                                }
+                            }
+                    });
                 }
             }
         }
@@ -216,7 +270,7 @@ export class DungeonScene extends Phaser.Scene {
         return holes;
     }
 
-    #replenishField() {
+    #addNewTiles() {
         let totalTiles = 0;
 
         for(let col = 0; col < this.#cols; col++) {
@@ -237,27 +291,28 @@ export class DungeonScene extends Phaser.Scene {
                     this.#tiles[i][col].sprite.alpha = 1;
                     this.#tiles[i][col].isEmpty = false;
 
-                    this.tweens.add({
-                        targets: this.#tiles[i][col].sprite,
-                        y: TILE_SIZE * i + TILE_SIZE / 2,
-                        duration: 200 * holes,
-                        callbackScope: this,
-                        onComplete: () => {
-                            totalTiles--;
+                    // this.tweens.add({
+                    //     targets: this.#tiles[i][col].sprite,
+                    //     y: TILE_SIZE * i + TILE_SIZE / 2,
+                    //     duration: 200 * holes,
+                    //     callbackScope: this,
+                    //     onComplete: () => {
+                    //         totalTiles--;
 
-                            if (totalTiles === 0) {
-                                if (this.#hasMatches()) {
-                                    this.time.addEvent({
-                                        delay: 500,
-                                        callback: this.#handleMatches,
-                                        callbackScope: this,
-                                    });
-                                } else {
-                                    this.#canSelect = true;
-                                }
-                            }
-                        }
-                    });
+                    //         if (totalTiles === 0) {
+                    //             if (this.#hasMatches()) {
+                    //                 // Pause before removing the matches
+                    //                 this.time.addEvent({
+                    //                     delay: 200,
+                    //                     callback: this.#handleMatches,
+                    //                     callbackScope: this,
+                    //                 });
+                    //             } else {
+                    //                 this.#canSelect = true;
+                    //             }
+                    //         }
+                    //     }
+                    // });
                 }
             }
         }
