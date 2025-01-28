@@ -11,6 +11,7 @@ export class Block {
     #icon;
     /** @type {number} */
     #value;
+    #text;
 
     constructor(container, background, icon) {
         this.#color = -1;
@@ -45,7 +46,13 @@ export class Block {
         }
     }
 
+    clear() {
+        this.#container.remove(this.#text);
+        this.#text.destroy();
+    }
+
     showValue(text) {
-        this.#container.add(text);
+        this.#text = text;
+        this.#container.add(this.#text);
     }
 }

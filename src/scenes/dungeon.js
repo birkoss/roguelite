@@ -10,8 +10,7 @@ const TILE_SIZE = 44;   // 40
 
 /**
  * @typedef {Object} Streak
- * @property {number} length
- * @property {number} color
+ * @property {number} bonus
  * @property {Tile[]} tiles
  */
 
@@ -230,96 +229,23 @@ export class DungeonScene extends Phaser.Scene {
         if (tile !== null && tile === this.#selectedTile) {
             this.#canSelect = false;
 
+            let streak = {
+                bonus: 1,
+                tiles: [],
+            }
             // Delete entire selected row
             for (let i = 0; i < this.#width; i++) {
                 let rowTile = this.#getTileAt(i, this.#selectedTile.y);
                 if (rowTile === null) {
                     continue;
                 }
-                rowTile.updateState({toRemove: true});
+                streak.tiles.push(rowTile);
             }
-            this.#destroyTiles();
+            
+            this.#destroyStreaks([streak]);
         }
 
         this.#selectedTile = null;
-    }
-
-    /**
-     * Destroy the tiles that are marked for removal
-     * - Moves the tiles above the removed tiles down
-     * - Adds new tiles to the top of the grid
-     * - Tweens the tiles to their new positions
-     */
-    #destroyTiles() {
-        let totalTiles = 0;
-
-        for (let y = 0; y < this.#height; y++) {
-            for (let x = 0; x < this.#width; x++) {
-                let tile = this.#getTileAt(x, y);
-                if (tile === null) {
-                    continue;
-                }
-
-                if (tile.toRemove) {
-                    totalTiles++;
-                    this.tweens.add({
-                        targets: tile.block.icon,
-                        alpha: 0,
-                        duration: 200,
-                        ease: Phaser.Math.Easing.Sine.InOut,
-                        callbackScope: this,
-                        onComplete: () => {
-                            let text = this.add.bitmapText(0, -5, UI_ASSET_KEYS.LARGE_FONT, "+" + tile.block.value, 21).setTint(0xffffff).setOrigin(0.5, 0.5); 
-                            tile.block.showValue(text);
-                            
-                            text.setAlpha(0);
-                            this.tweens.add({
-                                targets: text,
-                                y: text.y - 10,
-                                duration: 200,
-                                yoyo: true,
-                                ease: Phaser.Math.Easing.Sine.InOut,
-                            });
-                            this.tweens.add({
-                                targets: text,
-                                alpha: 1,
-                                duration: 800,
-                                ease: Phaser.Math.Easing.Sine.InOut,
-                                onComplete: () => {
-                                    // TODO: also Remove from block container
-                                    text.destroy();
-
-                                    this.tweens.add({
-                                        targets: tile.block.container,
-                                        alpha: 0,
-                                        duration: 500,
-                                        ease: Phaser.Math.Easing.Sine.InOut,
-                                        onComplete: () => {
-                                            totalTiles--;
-                                            this.#blocksPooled.push(tile.block);
-
-                                            tile.block.container.visible = false;
-
-                                            if (totalTiles === 0) {
-                                                return;
-                                                // Move row, col for each remaining tile
-                                                this.#moveExistingTiles();
-                                                // Place new tile on top
-                                                this.#addNewTiles();
-                                                // Tween each sprite to its new position
-                                                this.#makeTilesFall();
-                                            }
-                                        }
-                                    });
-                                }
-                            });
-                        }
-                    });
-
-                    tile.updateState({isEmpty: true, toRemove: false});
-                }
-            }
-        }
     }
 
     /**
@@ -468,8 +394,7 @@ export class DungeonScene extends Phaser.Scene {
                     let endStreak = (colorToWatch === currentColor ? y : y - 1);
                     if (colorStreak >= 3) {
                         let streak = {
-                            length: colorStreak,
-                            color: currentColor,
+                            bonus: (colorStreak === 3 ? 2 : 3),
                             tiles: [],
                         }
                         for (let k = 0; k < colorStreak; k++) {
@@ -489,36 +414,7 @@ export class DungeonScene extends Phaser.Scene {
             }
         }
 
-        this.#removeMatches(streaks);
-    }
-
-    /**
-     * Remove the tiles from the streaks
-     * @param {Streak[]} streaks
-     */
-    #removeMatches(streaks) {
-        let totalTiles = 0;
-
-        streaks.forEach(singleStreak => {
-            console.log(singleStreak);
-            singleStreak.tiles.forEach(tile => {
-                totalTiles++;
-                tile.block.highlight();
-
-                this.time.addEvent({
-                    delay: 200,
-                    callback: () => {
-                        totalTiles--;
-
-                        tile.updateState({toRemove: true});
-
-                        if (totalTiles === 0) {
-                            this.#destroyTiles();
-                        }
-                    }
-                });
-            });
-        });
+        this.#destroyStreaks(streaks);
     }
 
     /**
@@ -530,4 +426,98 @@ export class DungeonScene extends Phaser.Scene {
         // TODO: Make sure the total number of index is dynamic
         return Phaser.Math.Between(0, 4);
     }
+
+    #destroyStreaks(streaks, currentStreak = 0) {
+        if (currentStreak >= streaks.length) {
+            // Move row, col for each remaining tile
+            this.#moveExistingTiles();
+            // Place new tile on top
+            this.#addNewTiles();
+            // Tween each sprite to its new position
+            this.#makeTilesFall();
+
+            return;
+        }
+
+        this.#animateStreakTiles(streaks, currentStreak);
+    }
+
+    #animateStreakTiles(streaks, currentStreak, currentTile = 0) {
+        if (currentTile >= streaks[currentStreak].tiles.length) {
+            this.time.addEvent({
+                delay: 200,
+                callback: () => {
+                    this.#HideStreakTiles(streaks, currentStreak);
+                }
+            });
+            return;
+        }
+
+        let tile = streaks[currentStreak].tiles[currentTile];
+        if (tile === null) {
+            return;
+        }
+
+        let text = this.add.bitmapText(0, -5, UI_ASSET_KEYS.LARGE_FONT, "+" + (tile.block.value * streaks[currentStreak].bonus), 21).setTint(0xffffff).setOrigin(0.5, 0.5); 
+        text.setAlpha(0);
+        tile.block.showValue(text);
+        
+        this.tweens.add({
+            targets: text,
+            y: text.y - 10,
+            duration: 200,
+            scale: 1.8,
+            yoyo: true,
+            ease: Phaser.Math.Easing.Sine.InOut,
+        });
+
+        this.tweens.add({
+            targets: tile.block.icon,
+            alpha: 0.5,
+            duration: 200,
+            ease: Phaser.Math.Easing.Sine.InOut,
+        });
+
+        this.tweens.add({
+            targets: text,
+            alpha: 1,
+            y: text.y - 10,
+            duration: 200,
+            ease: Phaser.Math.Easing.Sine.InOut,
+        });
+
+        this.time.addEvent({
+            delay: 50,
+            callback: () => {
+                this.#animateStreakTiles(streaks, currentStreak, currentTile+1);
+            }
+        });
+    }
+
+    #HideStreakTiles(streaks, currentStreak) {
+        let totalTiles = streaks[currentStreak].tiles.length;
+
+        streaks[currentStreak].tiles.forEach(singleTile => {
+            this.tweens.add({
+                targets: singleTile.block.container,
+                alpha: 0,
+                duration: 500,
+                ease: Phaser.Math.Easing.Sine.InOut,
+                onComplete: () => {
+                    totalTiles--;
+
+                    singleTile.block.clear();
+                    this.#blocksPooled.push(singleTile.block);
+
+                    singleTile.updateState({isEmpty: true, toRemove: false});
+
+                    singleTile.block.container.visible = false;
+                    if (totalTiles === 0) {
+                        this.#destroyStreaks(streaks, currentStreak + 1);
+                    }
+                }
+            });
+        });
+    }
+
 }
