@@ -4,8 +4,9 @@ import { SCENE_KEYS } from "../keys/scene.js";
 import { TILE_ASSET_KEYS, UI_ASSET_KEYS } from "../keys/asset.js";
 import { Tile } from "../tile.js";
 import { Block } from "../block.js";
+import { Panel } from "../panel.js";
 
-const TILE_SIZE = 40;   // 40
+const TILE_SIZE = 44;   // 40
 
 /**
  * @typedef {Object} Streak
@@ -32,6 +33,9 @@ export class DungeonScene extends Phaser.Scene {
     /** @type {Block[]} */
     #blocksPooled;
 
+    /** @type {Panel} */
+    #panel;
+
     constructor() {
         super({
             key: SCENE_KEYS.DUNGEON_SCENE,
@@ -43,6 +47,8 @@ export class DungeonScene extends Phaser.Scene {
 
     create() {
         this.#createTiles(8, 10);
+
+        this.#panel = new Panel(this, 0, 0);
 
         this.input.on("pointerdown", this.#selectTile, this);
         this.input.on("pointerup", this.#unselectTile, this);
@@ -263,9 +269,10 @@ export class DungeonScene extends Phaser.Scene {
                         ease: Phaser.Math.Easing.Sine.InOut,
                         callbackScope: this,
                         onComplete: () => {
-                            let text = this.add.bitmapText(0, 0, UI_ASSET_KEYS.LARGE_FONT, "+" + tile.block.value, 24).setTint(0xffffff).setOrigin(0.5, 0.5); 
-                            text.setAlpha(0);
+                            let text = this.add.bitmapText(0, -5, UI_ASSET_KEYS.LARGE_FONT, "+" + tile.block.value, 21).setTint(0xffffff).setOrigin(0.5, 0.5); 
                             tile.block.showValue(text);
+                            
+                            text.setAlpha(0);
                             this.tweens.add({
                                 targets: text,
                                 y: text.y - 10,
@@ -294,6 +301,7 @@ export class DungeonScene extends Phaser.Scene {
                                             tile.block.container.visible = false;
 
                                             if (totalTiles === 0) {
+                                                return;
                                                 // Move row, col for each remaining tile
                                                 this.#moveExistingTiles();
                                                 // Place new tile on top

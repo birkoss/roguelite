@@ -7,6 +7,7 @@ import { SCENE_KEYS } from './keys/scene.js';
 const game = new Phaser.Game({
     type: Phaser.AUTO,
     pixelArt: true,
+    roundPixels: true,
     scale: {
         parent: 'game-container',
         width: window.innerWidth,

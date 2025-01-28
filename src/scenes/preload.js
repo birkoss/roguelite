@@ -12,15 +12,16 @@ export class PreloadScene extends Phaser.Scene {
 
     preload() {
         this.load.spritesheet(TILE_ASSET_KEYS.TILE, 'assets/tilesets/tile.png', {
-            frameWidth: 40,
-            frameHeight: 40,
+            frameWidth: 44,
+            frameHeight: 44,
         });
         this.load.spritesheet(TILE_ASSET_KEYS.ICON, 'assets/tilesets/icon.png', {
             frameWidth: 28,
             frameHeight: 28,
         });
         this.load.bitmapFont(UI_ASSET_KEYS.SMALL_FONT, 'assets/fonts/small-font.png', 'assets/fonts/small-font.xml');
-        this.load.bitmapFont(UI_ASSET_KEYS.LARGE_FONT, 'assets/fonts/large-font.png', 'assets/fonts/large-font.xml');
+        this.load.bitmapFont(UI_ASSET_KEYS.LARGE_FONT, 'assets/fonts/Unnamed.png', 'assets/fonts/Unnamed.xml');
+        // this.load.bitmapFont(UI_ASSET_KEYS.LARGE_FONT, 'assets/fonts/large-font.png', 'assets/fonts/large-font.xml');
     }
 
     create() {
