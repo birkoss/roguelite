@@ -1,7 +1,7 @@
 import Phaser from "../lib/phaser.js";
 
 import { SCENE_KEYS } from "../keys/scene.js";
-import { TILE_ASSET_KEYS } from "../keys/asset.js";
+import { TILE_ASSET_KEYS, UI_ASSET_KEYS } from "../keys/asset.js";
 import { Tile } from "../tile.js";
 import { Block } from "../block.js";
 
@@ -257,22 +257,54 @@ export class DungeonScene extends Phaser.Scene {
                 if (tile.toRemove) {
                     totalTiles++;
                     this.tweens.add({
-                        targets: tile.block.container,
-                        alpha: 0.5,
+                        targets: tile.block.icon,
+                        alpha: 0,
                         duration: 200,
+                        ease: Phaser.Math.Easing.Sine.InOut,
                         callbackScope: this,
                         onComplete: () => {
-                            totalTiles--;
-                            tile.block.container.visible = false;
-                            this.#blocksPooled.push(tile.block);
-                            if (totalTiles === 0) {
-                                // Move row, col for each remaining tile
-                                this.#moveExistingTiles();
-                                // Place new tile on top
-                                this.#addNewTiles();
-                                // Tween each sprite to its new position
-                                this.#makeTilesFall();
-                            }
+                            let text = this.add.bitmapText(0, 0, UI_ASSET_KEYS.LARGE_FONT, "+" + tile.block.value, 24).setTint(0xffffff).setOrigin(0.5, 0.5); 
+                            text.setAlpha(0);
+                            tile.block.showValue(text);
+                            this.tweens.add({
+                                targets: text,
+                                y: text.y - 10,
+                                duration: 200,
+                                yoyo: true,
+                                ease: Phaser.Math.Easing.Sine.InOut,
+                            });
+                            this.tweens.add({
+                                targets: text,
+                                alpha: 1,
+                                duration: 800,
+                                ease: Phaser.Math.Easing.Sine.InOut,
+                                onComplete: () => {
+                                    // TODO: also Remove from block container
+                                    text.destroy();
+
+                                    this.tweens.add({
+                                        targets: tile.block.container,
+                                        alpha: 0,
+                                        duration: 500,
+                                        ease: Phaser.Math.Easing.Sine.InOut,
+                                        onComplete: () => {
+                                            totalTiles--;
+                                            this.#blocksPooled.push(tile.block);
+
+                                            tile.block.container.visible = false;
+
+                                            if (totalTiles === 0) {
+                                                // Move row, col for each remaining tile
+                                                this.#moveExistingTiles();
+                                                // Place new tile on top
+                                                this.#addNewTiles();
+                                                // Tween each sprite to its new position
+                                                this.#makeTilesFall();
+                                            }
+                                        }
+                                    });
+                                }
+                            });
                         }
                     });
 
@@ -387,6 +419,7 @@ export class DungeonScene extends Phaser.Scene {
                     tile.block = this.#blocksPooled.pop();
 
                     tile.block.updateColor(this.#generateRandomColor());
+                    tile.block.icon.setAlpha(1);
 
                     tile.block.container.visible = true;
                     tile.block.container.x = TILE_SIZE * x + TILE_SIZE / 2;

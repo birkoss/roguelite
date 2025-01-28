@@ -44,4 +44,8 @@ export class Block {
             this.#icon.setFrame(newColor);
         }
     }
+
+    showValue(text) {
+        this.#container.add(text);
+    }
 }

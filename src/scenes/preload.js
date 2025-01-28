@@ -1,7 +1,7 @@
 import Phaser from "../lib/phaser.js";
 
 import { SCENE_KEYS } from "../keys/scene.js";
-import { TILE_ASSET_KEYS } from "../keys/asset.js";
+import { TILE_ASSET_KEYS, UI_ASSET_KEYS } from "../keys/asset.js";
 
 export class PreloadScene extends Phaser.Scene {
     constructor() {
@@ -19,6 +19,8 @@ export class PreloadScene extends Phaser.Scene {
             frameWidth: 28,
             frameHeight: 28,
         });
+        this.load.bitmapFont(UI_ASSET_KEYS.SMALL_FONT, 'assets/fonts/small-font.png', 'assets/fonts/small-font.xml');
+        this.load.bitmapFont(UI_ASSET_KEYS.LARGE_FONT, 'assets/fonts/large-font.png', 'assets/fonts/large-font.xml');
     }
 
     create() {
