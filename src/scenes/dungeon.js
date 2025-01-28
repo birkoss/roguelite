@@ -6,7 +6,7 @@ import { Tile } from "../tile.js";
 import { Block } from "../block.js";
 import { Panel } from "../panel.js";
 
-const TILE_SIZE = 44;   // 40
+const TILE_SIZE = 44;
 
 /**
  * @typedef {Object} Streak
@@ -424,17 +424,19 @@ export class DungeonScene extends Phaser.Scene {
      */
     #generateRandomColor() {
         // TODO: Make sure the total number of index is dynamic
-        return Phaser.Math.Between(0, 4);
+        return Phaser.Math.Between(0, 4);// 4
     }
 
     #destroyStreaks(streaks, currentStreak = 0) {
         if (currentStreak >= streaks.length) {
-            // Move row, col for each remaining tile
-            this.#moveExistingTiles();
-            // Place new tile on top
-            this.#addNewTiles();
-            // Tween each sprite to its new position
-            this.#makeTilesFall();
+            console.log("ALL DONE");
+
+            this.time.addEvent({
+                delay: 200,
+                callback: () => {
+                    this.#HideStreakTiles(streaks);
+                }
+            });
 
             return;
         }
@@ -447,7 +449,8 @@ export class DungeonScene extends Phaser.Scene {
             this.time.addEvent({
                 delay: 200,
                 callback: () => {
-                    this.#HideStreakTiles(streaks, currentStreak);
+                    // this.#HideStreakTiles(streaks, currentStreak);
+                    this.#destroyStreaks(streaks, currentStreak + 1);
                 }
             });
             return;
@@ -466,7 +469,7 @@ export class DungeonScene extends Phaser.Scene {
             targets: text,
             y: text.y - 10,
             duration: 200,
-            scale: 1.8,
+            scale: 1.2,
             yoyo: true,
             ease: Phaser.Math.Easing.Sine.InOut,
         });
@@ -484,38 +487,60 @@ export class DungeonScene extends Phaser.Scene {
             y: text.y - 10,
             duration: 200,
             ease: Phaser.Math.Easing.Sine.InOut,
+            onComplete: () => {
+                this.time.addEvent({
+                    delay: 500,
+                    callback: () => {
+                        this.tweens.add({
+                            targets: text,
+                            alpha: 0,
+                            duration: 200,
+                            ease: Phaser.Math.Easing.Sine.InOut,
+                        });
+                    }
+                });
+            }
         });
 
         this.time.addEvent({
-            delay: 50,
+            delay: 75,
             callback: () => {
                 this.#animateStreakTiles(streaks, currentStreak, currentTile+1);
             }
         });
     }
 
-    #HideStreakTiles(streaks, currentStreak) {
-        let totalTiles = streaks[currentStreak].tiles.length;
+    #HideStreakTiles(streaks) {
+        let totalTiles = 0;
 
-        streaks[currentStreak].tiles.forEach(singleTile => {
-            this.tweens.add({
-                targets: singleTile.block.container,
-                alpha: 0,
-                duration: 500,
-                ease: Phaser.Math.Easing.Sine.InOut,
-                onComplete: () => {
-                    totalTiles--;
+        streaks.forEach(singleStreak => {
+            totalTiles += singleStreak.tiles.length;
 
-                    singleTile.block.clear();
-                    this.#blocksPooled.push(singleTile.block);
-
-                    singleTile.updateState({isEmpty: true, toRemove: false});
-
-                    singleTile.block.container.visible = false;
-                    if (totalTiles === 0) {
-                        this.#destroyStreaks(streaks, currentStreak + 1);
+            singleStreak.tiles.forEach(singleTile => {
+                this.tweens.add({
+                    targets: singleTile.block.container,
+                    alpha: 0,
+                    duration: 500,
+                    ease: Phaser.Math.Easing.Sine.InOut,
+                    onComplete: () => {
+                        totalTiles--;
+    
+                        singleTile.block.clear();
+                        this.#blocksPooled.push(singleTile.block);
+    
+                        singleTile.updateState({isEmpty: true, toRemove: false});
+    
+                        singleTile.block.container.visible = false;
+                        if (totalTiles === 0) {
+                            // Move row, col for each remaining tile
+                            this.#moveExistingTiles();
+                            // Place new tile on top
+                            this.#addNewTiles();
+                            // Tween each sprite to its new position
+                            this.#makeTilesFall();
+                        }
                     }
-                }
+                });
             });
         });
     }
