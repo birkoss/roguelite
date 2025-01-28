@@ -424,13 +424,18 @@ export class DungeonScene extends Phaser.Scene {
      */
     #generateRandomColor() {
         // TODO: Make sure the total number of index is dynamic
-        return Phaser.Math.Between(0, 4);// 4
+        return Phaser.Math.Between(0, 4);
     }
 
+    /**
+     * Destroy the streaks
+     * - First animate the tiles and points
+     * - Then hide the tiles and replenish the board
+     * @param {Streak[]} streaks
+     * @param {number} [currentStreak]
+     */
     #destroyStreaks(streaks, currentStreak = 0) {
         if (currentStreak >= streaks.length) {
-            console.log("ALL DONE");
-
             this.time.addEvent({
                 delay: 200,
                 callback: () => {
@@ -444,12 +449,17 @@ export class DungeonScene extends Phaser.Scene {
         this.#animateStreakTiles(streaks, currentStreak);
     }
 
+    /**
+     * Animate the tiles of a specific streak until all streaks have been animated
+     * @param {Streak[]} streaks
+     * @param {number} currentStreak
+     * @param {number} [currentTile]
+     */
     #animateStreakTiles(streaks, currentStreak, currentTile = 0) {
         if (currentTile >= streaks[currentStreak].tiles.length) {
             this.time.addEvent({
                 delay: 200,
                 callback: () => {
-                    // this.#HideStreakTiles(streaks, currentStreak);
                     this.#destroyStreaks(streaks, currentStreak + 1);
                 }
             });
@@ -510,6 +520,10 @@ export class DungeonScene extends Phaser.Scene {
         });
     }
 
+    /**
+     * Hide all the tiles in the all the streaks
+     * @param {Streak[]} streaks
+     */
     #HideStreakTiles(streaks) {
         let totalTiles = 0;
 
@@ -544,5 +558,4 @@ export class DungeonScene extends Phaser.Scene {
             });
         });
     }
-
 }
