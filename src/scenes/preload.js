@@ -1,7 +1,7 @@
 import Phaser from "../lib/phaser.js";
 
 import { SCENE_KEYS } from "../keys/scene.js";
-import { TILE_ASSET_KEYS, UI_ASSET_KEYS } from "../keys/asset.js";
+import { TILE_ASSET_KEYS, UI_ASSET_KEYS, UNIT_ASSET_KEYS } from "../keys/asset.js";
 
 export class PreloadScene extends Phaser.Scene {
     constructor() {
@@ -18,6 +18,10 @@ export class PreloadScene extends Phaser.Scene {
         this.load.spritesheet(TILE_ASSET_KEYS.ICON, 'assets/tilesets/icon.png', {
             frameWidth: 28,
             frameHeight: 28,
+        });
+        this.load.spritesheet(UNIT_ASSET_KEYS.AVATAR, 'assets/tilesets/avatar.png', {
+            frameWidth: 72,
+            frameHeight: 72,
         });
         this.load.bitmapFont(UI_ASSET_KEYS.SMALL_FONT, 'assets/fonts/small-font.png', 'assets/fonts/small-font.xml');
         this.load.bitmapFont(UI_ASSET_KEYS.LARGE_FONT, 'assets/fonts/Unnamed.png', 'assets/fonts/Unnamed.xml');

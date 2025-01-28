@@ -9,6 +9,7 @@ export const DUNGEON_ASSET_KEYS = Object.freeze({
 
 export const UNIT_ASSET_KEYS = Object.freeze({
     UNIT: 'UNIT_ASSET_KEYS.UNIT',
+    AVATAR: 'UNIT_ASSET_KEYS.AVATAR',
 });
 
 export const UI_ASSET_KEYS = Object.freeze({
