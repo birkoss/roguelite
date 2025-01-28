@@ -21,6 +21,7 @@ export class PreloadScene extends Phaser.Scene {
         });
         this.load.bitmapFont(UI_ASSET_KEYS.SMALL_FONT, 'assets/fonts/small-font.png', 'assets/fonts/small-font.xml');
         this.load.bitmapFont(UI_ASSET_KEYS.LARGE_FONT, 'assets/fonts/Unnamed.png', 'assets/fonts/Unnamed.xml');
+        this.load.bitmapFont(UI_ASSET_KEYS.POINT, 'assets/fonts/point.png', 'assets/fonts/point.xml');
         // this.load.bitmapFont(UI_ASSET_KEYS.LARGE_FONT, 'assets/fonts/large-font.png', 'assets/fonts/large-font.xml');
     }
 

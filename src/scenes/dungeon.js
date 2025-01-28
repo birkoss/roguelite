@@ -471,10 +471,16 @@ export class DungeonScene extends Phaser.Scene {
             return;
         }
 
-        let text = this.add.bitmapText(0, -5, UI_ASSET_KEYS.LARGE_FONT, "+" + (tile.block.value * streaks[currentStreak].bonus), 21).setTint(0xffffff).setOrigin(0.5, 0.5); 
-        text.setAlpha(0);
+        let label = (tile.block.color === 4 ? "-" : "+") + (tile.block.value * streaks[currentStreak].bonus);
+        let color = 0xffffff;
+        if (tile.block.color === 4) {
+            color = 0xd40200;
+        }
+
+        let text = this.add.bitmapText(0, 0, UI_ASSET_KEYS.POINT, label, 20).setTint(color).setOrigin(0.5);
         tile.block.showValue(text);
         
+        text.setAlpha(0);
         this.tweens.add({
             targets: text,
             y: text.y - 10,
