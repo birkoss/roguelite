@@ -1,7 +1,7 @@
 import Phaser from "../lib/phaser.js";
 
 import { SCENE_KEYS } from "../keys/scene.js";
-import { TILE_ASSET_KEYS, UI_ASSET_KEYS, UNIT_ASSET_KEYS } from "../keys/asset.js";
+import { DUNGEON_ASSET_KEYS, TILE_ASSET_KEYS, UI_ASSET_KEYS, UNIT_ASSET_KEYS } from "../keys/asset.js";
 
 export class PreloadScene extends Phaser.Scene {
     constructor() {
@@ -19,10 +19,19 @@ export class PreloadScene extends Phaser.Scene {
             frameWidth: 28,
             frameHeight: 28,
         });
+        this.load.spritesheet(UNIT_ASSET_KEYS.UNIT, 'assets/tilesets/unit.png', {
+            frameWidth: 48,
+            frameHeight: 72,
+        });
         this.load.spritesheet(UNIT_ASSET_KEYS.AVATAR, 'assets/tilesets/avatar.png', {
             frameWidth: 72,
             frameHeight: 72,
         });
+        this.load.spritesheet(UI_ASSET_KEYS.PANEL, 'assets/tilesets/panel.png', {
+            frameWidth: 16,
+            frameHeight: 20,
+        });
+        this.load.image(DUNGEON_ASSET_KEYS.BACKGROUND, 'assets/tilesets/background.png');
         this.load.bitmapFont(UI_ASSET_KEYS.SMALL_FONT, 'assets/fonts/small-font.png', 'assets/fonts/small-font.xml');
         this.load.bitmapFont(UI_ASSET_KEYS.LARGE_FONT, 'assets/fonts/Unnamed.png', 'assets/fonts/Unnamed.xml');
         this.load.bitmapFont(UI_ASSET_KEYS.POINT, 'assets/fonts/point.png', 'assets/fonts/point.xml');

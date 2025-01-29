@@ -65,7 +65,7 @@ export class DungeonScene extends Phaser.Scene {
         this.#tiles = [];
         this.#blocksPooled = [];
 
-        this.#container = this.add.container(40, 170);
+        this.#container = this.add.container(40, 200);
 
         // Create the tiles and blocks
         for (let y = 0; y < height; y++) {
