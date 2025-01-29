@@ -79,6 +79,28 @@ export class Panel {
         this.#createStatPanel("Goblin", 195, this.#stats[1], true);
     }
 
+    updateStats(stats) {
+        for (let key in stats) {
+            if (key === 'attack') {
+                this.#stats[1].health = Math.max(this.#stats[1].health - stats[key], 0);
+                this.#statsText[1][0].setText(this.#stats[1].health + "/" + this.#stats[1].maxHealth);
+            } else if (key === 'coin') {
+                this.#stats[0].coin += stats[key];
+                this.#statsText[0][2].setText(this.#stats[0].coin);
+            } else if (key === 'mana') {
+                this.#stats[0].mana += stats[key];
+                this.#statsText[0][1].setText(this.#stats[0].mana + "/" + this.#stats[0].maxMana);
+            } else if (key === 'health') {
+                this.#stats[0].health = Math.min(this.#stats[0].health + stats[key], this.#stats[0].maxHealth);
+                this.#statsText[0][0].setText(this.#stats[0].health + "/" + this.#stats[0].maxHealth);
+            } else if (key === 'damage') {
+                this.#stats[0].health = Math.max(this.#stats[0].health - stats[key], 0);
+                this.#statsText[0][0].setText(this.#stats[0].health + "/" + this.#stats[0].maxHealth);
+            }
+        }
+        console.log(stats);
+    }
+
     #createBackground(y, height, color, alpha = 1) {
         return this.#scene.add.rectangle(
             0, y, 

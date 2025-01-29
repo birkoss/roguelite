@@ -460,6 +460,38 @@ export class DungeonScene extends Phaser.Scene {
             this.time.addEvent({
                 delay: 200,
                 callback: () => {
+                    // Get total scores for the current streak
+                    
+                    const points = {
+                        attack: 0,
+                        health: 0,
+                        mana: 0,
+                        coin: 0,
+                        damage: 0,
+                    }
+                    streaks[currentStreak].tiles.forEach(singleTile => {
+                        const value = singleTile.block.value * streaks[currentStreak].bonus;
+                        switch (singleTile.block.color) {
+                            case 0:
+                                points.attack += value;
+                                break;
+                            case 1:
+                                points.health += value;
+                                break;
+                            case 2:
+                                points.mana += value;
+                                break;
+                            case 3:
+                                points.coin += value;
+                                break;
+                            case 4:
+                                points.damage += value;
+                                break;
+                        }
+                    });
+
+                    this.#panel.updateStats(points);
+
                     this.#destroyStreaks(streaks, currentStreak + 1);
                 }
             });
