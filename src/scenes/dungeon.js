@@ -1,7 +1,7 @@
 import Phaser from "../lib/phaser.js";
 
 import { SCENE_KEYS } from "../keys/scene.js";
-import { TILE_ASSET_KEYS, UI_ASSET_KEYS } from "../keys/asset.js";
+import { FONT_ASSET_KEYS, BLOCK_ASSET_KEYS } from "../keys/asset.js";
 import { Tile } from "../tile.js";
 import { Block } from "../block.js";
 import { Panel } from "../panel.js";
@@ -71,9 +71,9 @@ export class DungeonScene extends Phaser.Scene {
         for (let y = 0; y < height; y++) {
             for(let x = 0; x < width; x++) {
                 let container = this.add.container(TILE_SIZE * x + TILE_SIZE/2, TILE_SIZE * y + TILE_SIZE/2);
-                let background = this.add.sprite(0, 0, TILE_ASSET_KEYS.TILE);
+                let background = this.add.sprite(0, 0, BLOCK_ASSET_KEYS.BACKGROUND);
                 container.add(background);
-                let icon = this.add.sprite(0, 0, TILE_ASSET_KEYS.ICON);
+                let icon = this.add.sprite(0, 0, BLOCK_ASSET_KEYS.ICON);
                 container.add(icon);
                 this.#container.add(container);
 
@@ -477,7 +477,7 @@ export class DungeonScene extends Phaser.Scene {
             color = 0xd40200;
         }
 
-        let text = this.add.bitmapText(0, 0, UI_ASSET_KEYS.POINT, label, 20).setTint(color).setOrigin(0.5);
+        let text = this.add.bitmapText(0, 0, FONT_ASSET_KEYS.POINT, label, 20).setTint(color).setOrigin(0.5);
         tile.block.showValue(text);
         
         text.setAlpha(0);
