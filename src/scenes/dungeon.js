@@ -298,6 +298,14 @@ export class DungeonScene extends Phaser.Scene {
                             totalTiles--;
 
                             if (totalTiles === 0) {
+                                if (this.#panel.isEnemyDead()) {
+                                    alert("You won!!");
+                                    return;
+                                } else if (this.#panel.isPlayerDead()) {
+                                    alert("Game Over!!");
+                                    return;
+                                }
+    
                                 if (this.#hasMatches()) {
                                     // Pause before removing the matches
                                     this.time.addEvent({

@@ -79,6 +79,14 @@ export class Panel {
         this.#createStatPanel("Goblin", 195, this.#stats[1], true);
     }
 
+    isPlayerDead() {
+        return this.#stats[0].health === 0;
+    }
+
+    isEnemyDead() {
+        return this.#stats[1].health === 0;
+    }
+
     updateStats(stats) {
         for (let key in stats) {
             if (key === 'attack') {
