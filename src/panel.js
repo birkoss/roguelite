@@ -29,6 +29,9 @@ export class Panel {
 
     #units;
 
+    #stats;
+    #statsText;
+
     /**
      * @param {Phaser.Scene} scene - The scene this panel belongs to
      * @param {number} x - The x coordinate of the tile on the grid
@@ -52,9 +55,28 @@ export class Panel {
         ]);
 
         this.#units = [];
+        this.#statsText = [];
 
-        this.#createStatPanel("Your Knight", 0);
-        this.#createStatPanel("Goblin", 195, true);
+        // TODO: Wizard should start at full mana
+        this.#stats = [
+            {
+                'health': 10,
+                'maxHealth': 10,
+                'mana': 0,
+                'maxMana': 10,
+                'coin': 0,
+            },
+            {
+                'health': 10,
+                'maxHealth': 10,
+                'mana': 0,
+                'maxMana': 0,
+                'coin': 0,
+            }
+        ];
+
+        this.#createStatPanel("Your Knight", 0, this.#stats[0]);
+        this.#createStatPanel("Goblin", 195, this.#stats[1], true);
     }
 
     #createBackground(y, height, color, alpha = 1) {
@@ -84,7 +106,7 @@ export class Panel {
          .setAlpha(alpha);
     }
 
-    #createStatPanel(unitName, unitFrame, isRight = false) {
+    #createStatPanel(unitName, unitFrame, unitStats, isRight = false) {
         const origin = (isRight ? 1 : 0);
 
         // Create the frame for the name
@@ -126,13 +148,16 @@ export class Panel {
         this.#container.add(bg);
 
         const stats = [
-            { frame: 0, color: this.#config.colors.health, text: "10/10" },
-            { frame: 1, color: this.#config.colors.mana, text: "10/99" },
+            { frame: 0, color: this.#config.colors.health, text: unitStats.health + "/" + unitStats.maxHealth },
         ];
+        if (unitStats.maxMana > 0) {
+            stats.push({ frame: 1, color: this.#config.colors.mana, text: unitStats.mana + "/" + unitStats.maxMana });
+        }
         if (!isRight) {
-            stats.push({ frame: 2, color: this.#config.colors.coin, text: "230" });
+            stats.push({ frame: 2, color: this.#config.colors.coin, text: unitStats.coin });
         }
 
+        const labels = [];
         stats.forEach((singleStat, index) => {
             const y = 26 + (index * 42);
             const icon = this.#createIcon(xPos - (isRight ? 4 : 0), y, singleStat.frame, singleStat.color);
@@ -142,7 +167,11 @@ export class Panel {
             label.setOrigin(origin, 0);
             
             this.#container.add([icon, label]);
+
+            labels.push(label);
         });
+
+        this.#statsText.push(labels);
     }
 
 }
