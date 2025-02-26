@@ -66,6 +66,8 @@ export class Map {
             [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
         ];
 
+        this._layout = this.#generateLayout(30, 60);
+
         this._tilemap = this._scene.make.tilemap({
             tileWidth: 36,
             tileHeight: 36,
@@ -79,6 +81,9 @@ export class Map {
 
         this._layerShadow = this._tilemap.createBlankLayer("SHADOW", tileset);
         this._layerShadow.putTilesAt(this.#getLayoutToShadow(this._layout), 0, 0);
+
+        this._layerBackground.setScale(0.5);
+        this._layerShadow.setScale(0.5);
     }
 
     /** @type {Number} */
@@ -127,9 +132,9 @@ export class Map {
                         value = 93;
                         break;
                     case 1:
-                        value = 85;
+                        value = Phaser.Math.Between(1, 2) === 2 ? 131 : 85;
                         if (y+1 >= layout.length || (y+1 < layout.length && layout[y+1][x] === 0)) {
-                            value = 62;
+                            value = Phaser.Math.Between(1, 2) === 2 ? 108 : 62;
                         }
                         break;
                 }
@@ -163,5 +168,98 @@ export class Map {
         }
 
         return walls;
+    }
+
+    #generateLayout(width, height) {
+        const layout = [];
+
+        // Generate a layout with all walls
+        for (let y = 0; y < height; y++) {
+            let row = [];
+            for (let x = 0; x < width; x++) {
+                row.push(1);
+            }
+            layout.push(row);
+        }
+
+        // Dig holes in the layout
+        let tilesToRemove = ((width*height) * .5) - width*2 - height*2;
+
+        let walkerPosition = {x: Math.floor(width/2), y: Math.floor(height/2)};
+
+        const directions = [
+            {x: 0, y: -1},
+            {x: 0, y: 1},
+            {x: -1, y: 0},
+            {x: 1, y: 0},
+        ];
+
+        while (tilesToRemove > 0) {
+            var randomDirection = directions[Phaser.Math.Between(0, directions.length-1)];
+            
+            let newWalkerPosition = {x: walkerPosition.x + randomDirection.x, y: walkerPosition.y + randomDirection.y};
+
+            if (newWalkerPosition.x < 1 || newWalkerPosition.x >= width - 1 || newWalkerPosition.y < 1 || newWalkerPosition.y >= height - 1) {
+                continue;
+            }
+
+            if (layout[newWalkerPosition.y][newWalkerPosition.x] === 1) {
+                layout[newWalkerPosition.y][newWalkerPosition.x] = 0;
+                tilesToRemove--;
+            }
+
+            walkerPosition = newWalkerPosition;
+        }
+
+        // Shrink the layout
+        let removeY = [];
+        let removeX = [];
+
+        for (let y = 0; y < layout.length; y++) {
+            if ( y === 0 || y === layout.length - 1) {
+                continue;
+            }
+            let filled = 0;
+            for (let x = 0; x < layout[y].length; x++) {
+               if (layout[y][x] === 1) {
+                   filled++;
+               }
+            }
+            if (filled === layout[y].length) {
+                removeY.push(y);
+            }
+        }
+
+        for (let x = 0; x < layout[0].length; x++) {
+            if ( x === 0 || x === layout[0].length - 1) {
+                continue;
+            }
+            let filled = 0;
+            for (let y = 0; y < layout.length; y++) {
+                if (layout[y][x] === 1) {
+                    filled++;
+                }
+                if (filled === layout.length) {
+                    removeX.push(x);
+                }
+            }
+        }
+
+        let shrinkedLayout = [];
+        for (let y = 0; y < layout.length; y++) {
+            if (removeY.includes(y)) {
+                continue;
+            }
+            let row = [];
+            for (let x = 0; x < layout[y].length; x++) {
+                if (removeX.includes(x)) {
+                    continue;
+                }
+                row.push(layout[y][x]);
+            }
+            shrinkedLayout.push(row);
+        }
+
+        return shrinkedLayout;
     }
 }
