@@ -23,11 +23,17 @@ export class PreloadScene extends Phaser.Scene {
             frameHeight: 36,
         });
 
+        this.load.spritesheet(UI_ASSET_KEYS.ACTION, 'assets/tilesets/action.png', {
+            frameWidth: 30,
+            frameHeight: 30,
+        });
+
         this.load.json(
             DATA_ASSET_KEYS.UNIT,
             'assets/data/unit.json'
         );
 
+        this.load.bitmapFont(UI_ASSET_KEYS.UNIT, 'assets/fonts/unit/font.png', 'assets/fonts/unit/font.xml');
         this.load.bitmapFont(UI_ASSET_KEYS.SMALL_FONT, 'assets/fonts/small-font.png', 'assets/fonts/small-font.xml');
         this.load.bitmapFont(UI_ASSET_KEYS.LARGE_FONT, 'assets/fonts/large-font.png', 'assets/fonts/large-font.xml');
     }

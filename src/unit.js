@@ -1,6 +1,6 @@
 import Phaser from './lib/phaser.js';
 
-import { DUNGEON_ASSET_KEYS, UNIT_ASSET_KEYS } from './keys/asset.js';
+import { DUNGEON_ASSET_KEYS, UI_ASSET_KEYS, UNIT_ASSET_KEYS } from './keys/asset.js';
 
 export const UNIT_TYPES = Object.freeze({
     PLAYER: 'PLAYER',
@@ -19,13 +19,14 @@ export class Unit {
     _scene;
     /** @protected @type {keyof typeof UNIT_TYPES} */
     _type;
-    /** @protected @type {boolean} */
-    _isActive;
+
     /** @protected @type {Phaser.GameObjects.Sprite} */
     _sprite;
     /** @protected @type {Phaser.GameObjects.Sprite} */
     _shadow;
-
+    /** @protected @type {Phaser.GameObjects.BitmapText} */
+    _textHp;
+    /** @protected @type {Phaser.GameObjects.Container} */
     _container;
 
     /** @protected @type {number} */
@@ -47,8 +48,6 @@ export class Unit {
         this._hp = details.hp;
         this._attack = details.attack;
 
-        this._isActive = (this._type === UNIT_TYPES.PLAYER);
-
         this._container = this._scene.add.container((x * 36) + 18, (y * 36) + 18);
 
         this._shadow = this._scene.add.sprite(0, 0, DUNGEON_ASSET_KEYS.DUNGEON, 101);
@@ -63,52 +62,40 @@ export class Unit {
         this.#createAnimation('idleTop', [assetBaseFrame + 2, assetBaseFrame + 6]);
         this.#createAnimation('idleLeft', [assetBaseFrame + 3, assetBaseFrame + 7]);
 
-        this.#createAnimation('attackRight', this._details.assetFramesAttackRight, false);
-        this.#createAnimation('attackTop', this._details.assetFramesAttackTop, false);
-        this.#createAnimation('attackBottom', this._details.assetFramesAttackBottom, false);
-        this.#createAnimation('attackLeft', this._details.assetFramesAttackLeft, false);
+        this.#createAnimation('walkRight', [assetBaseFrame + 8, assetBaseFrame + 12]);
+        this.#createAnimation('walkBottom', [assetBaseFrame + 9, assetBaseFrame + 13]);
+        this.#createAnimation('walkTop', [assetBaseFrame + 10, assetBaseFrame + 14]);
+        this.#createAnimation('walkLeft', [assetBaseFrame + 11, assetBaseFrame + 15]);
+
+        this.#createAnimation('attackRight', [assetBaseFrame + 16, assetBaseFrame + 17], false);
+        this.#createAnimation('attackBottom', [assetBaseFrame + 18, assetBaseFrame + 19], false);
+        this.#createAnimation('attackTop', [assetBaseFrame + 20, assetBaseFrame + 21], false);
+        this.#createAnimation('attackLeft', [assetBaseFrame + 22, assetBaseFrame + 23], false);
 
         this._sprite.anims.play('idleRight');
         
+        if (this._type !== UNIT_TYPES.PLAYER) {
+            this._textHp = this._scene.add.bitmapText(6, 6, UI_ASSET_KEYS.UNIT, this._details.hp.toString(), 12).setOrigin(0.5);
+            this._container.add(this._textHp);
+        }
     }
     
     /** @type {keyof typeof UNIT_TYPES} */
-    get type() {
-        return this._type;
-    }
+    get type() { return this._type; }
 
     /** @type {Number} */
-    get x() {
-        return this._x;
-    }
+    get x() { return this._x; }
 
     /** @type {Number} */
-    get y() {
-        return this._y;
-    }
+    get y() { return this._y; }
 
-    /** @type {boolean} */
-    get isActive() {
-        return this._isActive;
-    }
+    get isAlive() { return this._hp > 0; }
 
-    get isAlive() {
-        return this._hp > 0;
-    }
+    /** @type {Phaser.GameObjects.Sprite} */
+    get gameObject() { return this._sprite; }
 
-    /** @type {Phaser.GameObjects.Image} */
-    get gameObject() {
-        return this._sprite;
-    }
-
-    get container() {
-        return this._container;
-    }
-
-    activate() {
-        this._isActive = true;
-        this.gameObject.setAlpha(1);
-    }
+    /** @type {Phaser.GameObjects.Container} */
+    get container() { return this._container; }
 
     face(direction) {
         this._sprite.anims.play("idle" + direction);
@@ -123,9 +110,9 @@ export class Unit {
         let newAnimationKey = this._sprite.anims.currentAnim.key;
 
         if (y == this.y) {
-            newAnimationKey = "idle" + (x > this.x ? 'Right' : 'Left');
+            newAnimationKey = "walk" + (x > this.x ? 'Right' : 'Left');
         } else if (x == this.x) {
-            newAnimationKey = "idle" + (y > this.y ? 'Bottom' : 'Top');
+            newAnimationKey = "walk" + (y > this.y ? 'Bottom' : 'Top');
         }
 
         if (newAnimationKey !== this._sprite.anims.currentAnim.key) {
@@ -142,16 +129,7 @@ export class Unit {
             targets: this.container,
             x: newX,
             y: newY,
-            duration: 100,
-            ease: Phaser.Math.Easing.Sine.Out,
-            onComplete: callback
-        });
-
-        this._scene.tweens.add({
-            targets: this.container,
-            x: newX,
-            y: newY,
-            duration: 100,
+            duration: 200,
             ease: Phaser.Math.Easing.Sine.Out,
             onComplete: callback
         });
@@ -164,37 +142,33 @@ export class Unit {
     attackUnit(defender, callback) {
         let newAnimationKey = this._sprite.anims.currentAnim.key;
 
-        if (defender.y == this.y) {
+        if (defender.y === this.y) {
             newAnimationKey = (defender.x > this.x ? 'Right' : 'Left');
-        } else if (defender.x == this.x) {
+        } else if (defender.x === this.x) {
             newAnimationKey = (defender.y > this.y ? 'Bottom' : 'Top');
         }
 
-        this._scene.time.delayedCall(200, () => {
-            defender.takeDamage(this._attack);
-        });
-
         this._sprite.anims.play("attack" + newAnimationKey).once('animationcomplete', () => {
             this._sprite.anims.play("idle" + newAnimationKey);
-
             callback();
          });
+
+         this._scene.time.delayedCall(200, () => {
+            defender.takeDamage();
+        });
     }
 
-    takeDamage(amount) {
-        console.log(amount);
-        this._hp = Math.max(this._hp - amount, 0);
+    takeDamage() {
+        this._hp = 0;
+
+        this._textHp.destroy();
 
         this._sprite.setTint(0xff0000);
-
         this._scene.time.delayedCall(400, () => {
             this._sprite.setTint(0xffffff);
-
-            if (!this.isAlive) {
-                this._sprite.anims.stop();
-                console.log(this._details.assetDeadFrame);
-                this._sprite.setFrame(this._details.assetDeadFrame);
-            }
+            this._shadow.destroy();
+            this._sprite.anims.stop();
+            this._sprite.setTexture(DUNGEON_ASSET_KEYS.DUNGEON, this._details.assetDeadFrame);
         });
     }
 

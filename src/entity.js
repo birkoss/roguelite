@@ -38,7 +38,7 @@ export class Entity {
 
         this._isActive = false;
 
-        this._phaserGameObject = this._scene.add.sprite((x * 30) + 15, (y * 30) + 15, DUNGEON_ASSET_KEYS.DUNGEON, 4);
+        this._phaserGameObject = this._scene.add.sprite((x * 36) + 18, (y * 36) + 18, DUNGEON_ASSET_KEYS.DUNGEON, 46);
 
         this.gameObject.setAlpha(0);
     }
