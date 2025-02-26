@@ -82,8 +82,8 @@ export class Map {
         this._layerShadow = this._tilemap.createBlankLayer("SHADOW", tileset);
         this._layerShadow.putTilesAt(this.#getLayoutToShadow(this._layout), 0, 0);
 
-        this._layerBackground.setScale(0.5);
-        this._layerShadow.setScale(0.5);
+        // this._layerBackground.setScale(0.5);
+        // this._layerShadow.setScale(0.5);
     }
 
     /** @type {Number} */
@@ -259,7 +259,7 @@ export class Map {
             }
             shrinkedLayout.push(row);
         }
-
+        
         return shrinkedLayout;
     }
 }
