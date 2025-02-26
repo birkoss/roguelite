@@ -24,8 +24,8 @@ export class PreloadScene extends Phaser.Scene {
         });
 
         this.load.spritesheet(UI_ASSET_KEYS.ACTION, 'assets/tilesets/action.png', {
-            frameWidth: 30,
-            frameHeight: 30,
+            frameWidth: 36,
+            frameHeight: 36,
         });
 
         this.load.json(

@@ -158,6 +158,11 @@ export class Unit {
         });
     }
 
+    idle() {
+        let direction = this._sprite.anims.currentAnim.key.replace('idle', '').replace('walk', '');  
+        this.face(direction);
+    }
+
     takeDamage() {
         this._hp = 0;
 

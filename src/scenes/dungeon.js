@@ -45,8 +45,6 @@ export class DungeonScene extends Phaser.Scene {
     }
 
     create() {
-        
-
         this.#createMap();
 
         this.#enemies = [];
@@ -72,8 +70,8 @@ export class DungeonScene extends Phaser.Scene {
         camera.setBounds(0, 0, this.#map.width * 36, this.#map.height * 36);
         camera.startFollow(this.#player.container, true); 
 
-        this.input.on('pointermove', this.#faceDirection, this);
-        this.input.on('pointerdown', this.#faceDirection, this);
+        this.input.on('pointermove', this.#onTileHighlighted, this);
+        this.input.on('pointerdown', this.#onTileHighlighted, this);
 
         this.input.on('pointerup', function (pointer) {
             this.#uiPaths.forEach(singleOverlay => {
@@ -90,38 +88,8 @@ export class DungeonScene extends Phaser.Scene {
                 return;
             }
 
-            let pathFinding = new Pathfinding(this.#getMapLayoutPlayer(), this.#map.width, this.#map.height);
-            let paths = pathFinding.find(
-                {x: this.#player.x, y: this.#player.y},
-                {x: tile.x, y: tile.y}
-            );
-
-            // Move to the location
-            if (paths.length > 0) {
-                paths.forEach(single_path => {
-                    this.#actions.push(new Action(this.#player, ACTION_TYPE.MOVE, {
-                        x: single_path.x,
-                        y: single_path.y
-                    }));
-                });
-                this.#stateMachine.setState(MAIN_STATES.PLAYER_EXECUTE_ACTION);
-                return;
-            }
-
-            // Clicked on an enemy
-            // @TODO: Calculate distance between tile and player
-            // - Choose MELEE or RANGED depending on the distance
-            this.#enemies.forEach(singleEnemy => {
-                if (singleEnemy.x === tile.x && singleEnemy.y === tile.y) {
-                    this.#actions.push({
-                        unit: this.#player,
-                        type: ACTION_TYPE.MELEE,
-                        data: singleEnemy,
-                    });
-                    this.#stateMachine.setState(MAIN_STATES.PLAYER_EXECUTE_ACTION);
-                }
-            });
-
+            this.#actions = this.#getActions(tile)
+            this.#stateMachine.setState(MAIN_STATES.PLAYER_EXECUTE_ACTION);
           }, this);
 
           this.#createStateMachine();
@@ -137,8 +105,7 @@ export class DungeonScene extends Phaser.Scene {
         this.#stateMachine.addState({
             name: MAIN_STATES.PLAYER_WAIT_ACTION,
             onEnter: () => {
-                let direction = this.#player.gameObject.anims.currentAnim.key.replace('idle', '').replace('walk', '');  
-                this.#player.face(direction);
+                this.#player.idle();
                 // ...
             },
         });
@@ -146,18 +113,6 @@ export class DungeonScene extends Phaser.Scene {
         this.#stateMachine.addState({
             name: MAIN_STATES.CHECK_EVENT,
             onEnter: () => {
-                // @TODO: Check this sooner
-                this.#entities.forEach(singleEntity => {
-                    if (singleEntity.isActive) {
-                        return;
-                    }
-                    this.#map.getTiles().forEach(tile => {
-                        if (tile.x === singleEntity.x && tile.y === singleEntity.y && tile.tint === 0xffffff) {
-                            singleEntity.activate();
-                        }
-                    });
-                });
-
                 let newEnemyAwaken = false;
 
                 this.#enemies.forEach(singleEnemy => {
@@ -217,7 +172,14 @@ export class DungeonScene extends Phaser.Scene {
                                 this.#stateMachine.setState(MAIN_STATES.CHECK_EVENT);
                             });
                         });
-                    }
+                    } else if (action.type === ACTION_TYPE.USE) {
+                        if (action.data.type === ENTITY_TYPE.STAIR) {
+                            this.#player.move(action.data.x, action.data.y, () => {
+                                this.#player.idle();
+                                this.scene.restart();
+                            });
+                        }
+                    } 
                 }
             },
         });
@@ -290,11 +252,18 @@ export class DungeonScene extends Phaser.Scene {
         this.#map = new Map(this);
     }
 
-    #faceDirection(pointer) {
+    /**
+     * @param {Phaser.Input.Pointer} pointer 
+     */
+    #onTileHighlighted(pointer) {
         this.#uiPaths.forEach(singleOverlay => {
             singleOverlay.destroy();
         });
         this.#uiPaths = [];
+
+        if (this.#stateMachine.currentStateName !== MAIN_STATES.PLAYER_WAIT_ACTION) {
+            return;
+        }
 
         var tile = this.#map.getTileAtWorldXY(pointer.worldX, pointer.worldY);
         if (!tile) {
@@ -310,21 +279,21 @@ export class DungeonScene extends Phaser.Scene {
             this.#player.face(this.#player.x > tile.x ? "Left" : "Right");
         }
 
-        let pathFinding = new Pathfinding(this.#getMapLayoutPlayer(), this.#map.width, this.#map.height);
-        let paths = pathFinding.find(
-            {x: this.#player.x, y: this.#player.y},
-            {x: tile.x, y: tile.y}
-        );
+        let actions = this.#getActions(tile);
 
-        if (paths.length > 0) {
-            paths.forEach(single_path => {
-                let img = this.add.image((single_path.x * 36) + 18, (single_path.y * 36) + 18, UI_ASSET_KEYS.ACTION, 0);
-                this.#uiPaths.push(img);
-            });
-        }
+        actions.forEach((singleAction) => {
+            let frame = 0;
+            if (singleAction.type === ACTION_TYPE.MELEE) {
+                frame = 1;
+            } else if (singleAction.type === ACTION_TYPE.USE) {
+                frame = 2;
+            }
+            let img = this.add.image((singleAction.data.x * 36) + 18, (singleAction.data.y * 36) + 18, UI_ASSET_KEYS.ACTION, frame);
+            this.#uiPaths.push(img);
+        });
     }
 
-    #getMapLayoutPlayer() {
+    #getMapLayoutWithEntities() {
         let layout = JSON.parse(JSON.stringify(this.#map.layout));
 
         // Add enemy in array to prevent going over them
@@ -340,5 +309,84 @@ export class DungeonScene extends Phaser.Scene {
         });
 
         return layout;
+    }
+
+    /**
+     * @param {Phaser.Tilemaps.Tile} tile 
+     */
+    #getActions(tile) {
+        const actions = [];
+
+        // Check if the player clicked on an enemy
+        let enemy = this.#enemies.find(singleEnemy => singleEnemy.isAlive && singleEnemy.x === tile.x && singleEnemy.y === tile.y);
+        if (enemy) {
+            const layout = this.#getMapLayoutWithEntities();
+            layout[enemy.y][enemy.x] = 0;
+
+            let pathFinding = new Pathfinding(layout, this.#map.width, this.#map.height);
+            let paths = pathFinding.find(
+                {x: this.#player.x, y: this.#player.y},
+                {x: tile.x, y: tile.y}
+            );
+
+            // Remove the last path as it is the enemy
+            paths.pop();
+
+            paths.forEach((single_path) => {
+                actions.push(new Action(this.#player, ACTION_TYPE.MOVE, {
+                    x: single_path.x,
+                    y: single_path.y
+                }));
+            });
+
+            actions.push(new Action(this.#player, ACTION_TYPE.MELEE, enemy));
+
+            return actions;
+        }
+
+        let entity = this.#entities.find(singleEntity => singleEntity.x === tile.x && singleEntity.y === tile.y);
+        if (entity) {
+            const layout = this.#getMapLayoutWithEntities();
+            layout[entity.y][entity.x] = 0;
+
+            let pathFinding = new Pathfinding(layout, this.#map.width, this.#map.height);
+            let paths = pathFinding.find(
+                {x: this.#player.x, y: this.#player.y},
+                {x: tile.x, y: tile.y}
+            );
+
+            // Remove the last path as it is the enemy
+            paths.pop();
+
+            paths.forEach((single_path) => {
+                actions.push(new Action(this.#player, ACTION_TYPE.MOVE, {
+                    x: single_path.x,
+                    y: single_path.y
+                }));
+            });
+
+            actions.push(new Action(this.#player, ACTION_TYPE.USE, entity));
+
+            return actions;
+        }
+
+
+        // Just walk around
+        let pathFinding = new Pathfinding(this.#getMapLayoutWithEntities(), this.#map.width, this.#map.height);
+        let paths = pathFinding.find(
+            {x: this.#player.x, y: this.#player.y},
+            {x: tile.x, y: tile.y}
+        );
+
+        if (paths.length > 0) {
+            paths.forEach((single_path) => {
+                actions.push(new Action(this.#player, ACTION_TYPE.MOVE, {
+                    x: single_path.x,
+                    y: single_path.y
+                }));
+            });
+        }
+
+        return actions;
     }
 }

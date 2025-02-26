@@ -3,6 +3,8 @@ import { Unit } from "./unit.js";
 export const ACTION_TYPE = Object.freeze({
     MOVE: 'MOVE',
     MELEE: 'MELEE',
+    RANGED: 'RANGED',
+    USE: 'USE',
 });
 
 export class Action {

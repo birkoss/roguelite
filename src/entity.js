@@ -20,8 +20,6 @@ export class Entity {
     _type;
     /** @protected @type {Phaser.GameObjects.Sprite} */
     _phaserGameObject;
-    /** @protected @type {boolean} */
-    _isActive;
     
     /**
      * @param {Phaser.Scene} scene
@@ -36,40 +34,18 @@ export class Entity {
         this._y = y;
         this._details = details;
 
-        this._isActive = false;
-
         this._phaserGameObject = this._scene.add.sprite((x * 36) + 18, (y * 36) + 18, DUNGEON_ASSET_KEYS.DUNGEON, 46);
-
-        this.gameObject.setAlpha(0);
     }
     
     /** @type {keyof typeof ENTITY_TYPE} */
-    get type() {
-        return this._type;
-    }
+    get type() { return this._type; }
 
     /** @type {Number} */
-    get x() {
-        return this._x;
-    }
+    get x() { return this._x; }
 
     /** @type {Number} */
-    get y() {
-        return this._y;
-    }
-
-    /** @type {boolean} */
-    get isActive() {
-        return this._isActive;
-    }
+    get y() { return this._y; }
 
     /** @type {Phaser.GameObjects.Image} */
-    get gameObject() {
-        return this._phaserGameObject;
-    }
-
-    activate() {
-        this._isActive = true;
-        this.gameObject.setAlpha(1);
-    }
+    get gameObject() { return this._phaserGameObject; }
 }
