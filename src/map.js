@@ -1,11 +1,14 @@
 import Phaser from './lib/phaser.js';
 
 import { DUNGEON_ASSET_KEYS } from './keys/asset.js';
+import { Decoration } from './decoration.js';
 
 export class Map {
     _layout;
     _tilemap;
+    /** @type {Phaser.Tilemaps.TilemapLayer} */
     _layerBackground;
+    /** @type {Phaser.Tilemaps.TilemapLayer} */
     _layerShadow;
 
     /**
@@ -13,60 +16,42 @@ export class Map {
     constructor(scene) {
         this._scene = scene;
 
-        this._layout = [
-            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-        ];
-
         this._layout = this.#generateLayout(20, 40);
+
+        // this._layout = [
+        //     [1, 1, 1, 1, 1, 1, 1, 1, 1],
+        //     [1, 0, 0, 0, 0, 0, 0, 0, 1],
+        //     [1, 0, 1, 1, 1, 1, 0, 0, 1],
+        //     [1, 0, 1, 0, 0, 0, 1, 0, 1],
+        //     [1, 0, 0, 0, 0, 0, 0, 0, 1],
+        //     [1, 1, 1, 1, 1, 1, 1, 1, 1],
+        // ];
+
+        const decorations = [];
+
+        for (let y = 0; y < this._layout.length; y++) {
+            for (let x = 0; x < this._layout[y].length; x++) {
+                if (this._layout[y][x] !== 1) {
+                    continue;
+                }
+
+                let value = 1;
+                let tiles = [];
+                this.#floodfill(tiles, x, y, 1);
+                if (tiles.length === 1) {
+                    value = 2;
+                } else if (tiles.length >= 4 && tiles.length <= 10) {
+                    value = 2;
+                }
+                tiles.forEach((singleTile) => {
+                    this._layout[singleTile.y][singleTile.x] = value;
+                });
+
+                if (value > 1) {
+                    decorations.push(tiles);
+                }
+            }
+        }
 
         this._tilemap = this._scene.make.tilemap({
             tileWidth: 36,
@@ -79,19 +64,26 @@ export class Map {
         this._layerBackground = this._tilemap.createBlankLayer("BACKGROUND", tileset);
         this._layerBackground.putTilesAt(this.#getLayoutToBackground(this._layout), 0, 0);
 
+        decorations.forEach((singleDecoration) => {
+            let frames = [104, 105];
+            if (singleDecoration.length === 1) {
+                frames = [178, 179];
+            } 
+            singleDecoration.forEach((singleTile) => {
+                let decoration = new Decoration(this._scene, singleTile.x, singleTile.y, frames);
+            });
+        });
+
         this._layerShadow = this._tilemap.createBlankLayer("SHADOW", tileset);
         this._layerShadow.putTilesAt(this.#getLayoutToShadow(this._layout), 0, 0);
-
-        // this._layerBackground.setScale(0.5);
-        // this._layerShadow.setScale(0.5);
     }
 
-    /** @type {Number} */
+    /** @type {number} */
     get width() {
         return this._tilemap.width;
     }
 
-    /** @type {Number} */
+    /** @type {number} */
     get height() {
         return this._tilemap.height;
     }
@@ -100,18 +92,19 @@ export class Map {
         return this._layout;
     }
 
+    /**
+     * @param {number} worldX 
+     * @param {number} worldY 
+     * @returns {Phaser.Tilemaps.Tile | null}
+     */
     getTileAtWorldXY(worldX, worldY) {
         return this._tilemap.getTileAtWorldXY(worldX, worldY, false, this._scene.cameras.main, this._layerBackground);
     }
 
-    worldToTileX(worldX) {
-        return this._tilemap.worldToTileX(worldX);
-    }
-
-    worldToTileY(worldY) { 
-        return this._tilemap.worldToTileY(worldY);
-    }
-
+    /**
+     * @param {number} x
+     * @param {number} y
+     */
     getTileAt(x, y) {
         return this._tilemap.getTileAt(x, y, false, this._layerBackground);
     }
@@ -120,6 +113,43 @@ export class Map {
         return this._layerBackground.getTilesWithin();
     }
 
+    /**
+     * @param {object[]} tiles
+     * @param {number} x
+     * @param {number} y
+     * @param {number} value
+     */
+    #floodfill(tiles, x, y, value) {
+        if (x < 0 || x >= this._layout[0].length || y < 0 || y >= this._layout.length) {
+            return [];
+        }
+
+        if (this._layout[y][x] !== value) {
+            return [];
+        }
+
+        if (tiles.find(tile => tile.x === x && tile.y === y)) {
+            return [];
+        }
+
+        tiles.push({ x, y });
+
+        for (let y2 = -1; y2 <= 1; y2++) {
+            for (let x2 = -1; x2 <= 1; x2++) {
+                if (Math.abs(x2) + Math.abs(y2) !== 1) {
+                    continue;
+                }
+                this.#floodfill(tiles, x+x2, y+y2, value);
+            }
+        }
+
+        return tiles;
+    }
+
+    /**
+     * @param {number[][]} layout 
+     * @returns number[][]
+     */
     #getLayoutToBackground(layout) {
         let walls = [];
 
@@ -146,6 +176,10 @@ export class Map {
         return walls;
     }
 
+    /**
+     * @param {number[][]} layout 
+     * @returns number[][]
+     */
     #getLayoutToShadow(layout) {
         let walls = [];
 
@@ -161,6 +195,15 @@ export class Map {
                             }
                         }
                         break;
+                    case 2:
+                        if (y > 0) {
+                            let tiles = [];
+                            this.#floodfill(tiles, x, y, 2);
+                            if (tiles.length > 1 && layout[y-1][x] !== 2) {
+                                value = 100;
+                            }
+                        }
+                        break;
                 }
                 row.push(value);
             }
@@ -170,6 +213,11 @@ export class Map {
         return walls;
     }
 
+    /**
+     * @param {number} width
+     * @param {number} height
+     * returns {number[][]}
+     */
     #generateLayout(width, height) {
         let layout = [];
 
@@ -183,10 +231,9 @@ export class Map {
         }
 
         // https://www.roguebasin.com/index.php?title=Cellular_Automata_Method_for_Generating_Random_Cave-Like_Levels
-        let loop = 4;
-        console.log("layout");
-        console.log(layout);
-        for (let i=0; i<loop; i++) {
+        let iteration = 4;
+
+        for (let i=0; i<iteration; i++) {
             let newLayout = [];
             for (let y = 0; y < layout.length; y++) {
                 let row = [];
@@ -229,91 +276,9 @@ export class Map {
                 newLayout.push(row);
             }
 
-            console.log("newLayout");
-            console.log(newLayout);
             layout = newLayout;
         }
 
         return layout;
-
-        // Dig holes in the layout
-        let tilesToRemove = ((width*height) * .5) - width*2 - height*2;
-
-        let walkerPosition = {x: Math.floor(width/2), y: Math.floor(height/2)};
-
-        const directions = [
-            {x: 0, y: -1},
-            {x: 0, y: 1},
-            {x: -1, y: 0},
-            {x: 1, y: 0},
-        ];
-
-        while (tilesToRemove > 0) {
-            var randomDirection = directions[Phaser.Math.Between(0, directions.length-1)];
-            
-            let newWalkerPosition = {x: walkerPosition.x + randomDirection.x, y: walkerPosition.y + randomDirection.y};
-
-            if (newWalkerPosition.x < 1 || newWalkerPosition.x >= width - 1 || newWalkerPosition.y < 1 || newWalkerPosition.y >= height - 1) {
-                continue;
-            }
-
-            if (layout[newWalkerPosition.y][newWalkerPosition.x] === 1) {
-                layout[newWalkerPosition.y][newWalkerPosition.x] = 0;
-                tilesToRemove--;
-            }
-
-            walkerPosition = newWalkerPosition;
-        }
-
-        // Shrink the layout
-        let removeY = [];
-        let removeX = [];
-
-        for (let y = 0; y < layout.length; y++) {
-            if ( y === 0 || y === layout.length - 1) {
-                continue;
-            }
-            let filled = 0;
-            for (let x = 0; x < layout[y].length; x++) {
-               if (layout[y][x] === 1) {
-                   filled++;
-               }
-            }
-            if (filled === layout[y].length) {
-                removeY.push(y);
-            }
-        }
-
-        for (let x = 0; x < layout[0].length; x++) {
-            if ( x === 0 || x === layout[0].length - 1) {
-                continue;
-            }
-            let filled = 0;
-            for (let y = 0; y < layout.length; y++) {
-                if (layout[y][x] === 1) {
-                    filled++;
-                }
-                if (filled === layout.length) {
-                    removeX.push(x);
-                }
-            }
-        }
-
-        let shrinkedLayout = [];
-        for (let y = 0; y < layout.length; y++) {
-            if (removeY.includes(y)) {
-                continue;
-            }
-            let row = [];
-            for (let x = 0; x < layout[y].length; x++) {
-                if (removeX.includes(x)) {
-                    continue;
-                }
-                row.push(layout[y][x]);
-            }
-            shrinkedLayout.push(row);
-        }
-        
-        return shrinkedLayout;
     }
 }

@@ -55,14 +55,14 @@ export class DungeonScene extends Phaser.Scene {
 
         let details = Data.getUnitDetails(this, 'skeleton');
 
-        let enemy = new Unit(this, UNIT_TYPES.ENEMY, 1, 10, details);
+        let enemy = new Unit(this, UNIT_TYPES.ENEMY, 3, 1, details);
         this.#enemies.push(enemy);
 
         let stair = new Entity(this, ENTITY_TYPE.STAIR, 4, 4, details);
         this.#entities.push(stair);
 
         details = Data.getUnitDetails(this, 'fighter');
-        this.#player = new Unit(this, UNIT_TYPES.PLAYER, 3, 5, details);
+        this.#player = new Unit(this, UNIT_TYPES.PLAYER, 1, 1, details);
 
 
         let camera = this.cameras.main; 
