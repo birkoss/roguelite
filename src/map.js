@@ -66,7 +66,7 @@ export class Map {
             [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
         ];
 
-        this._layout = this.#generateLayout(30, 60);
+        this._layout = this.#generateLayout(20, 40);
 
         this._tilemap = this._scene.make.tilemap({
             tileWidth: 36,
@@ -171,16 +171,70 @@ export class Map {
     }
 
     #generateLayout(width, height) {
-        const layout = [];
+        let layout = [];
 
         // Generate a layout with all walls
         for (let y = 0; y < height; y++) {
             let row = [];
             for (let x = 0; x < width; x++) {
-                row.push(1);
+                row.push(Phaser.Math.Between(0, 100) <= 45 ? 1 : 0);
             }
             layout.push(row);
         }
+
+        // https://www.roguebasin.com/index.php?title=Cellular_Automata_Method_for_Generating_Random_Cave-Like_Levels
+        let loop = 4;
+        console.log("layout");
+        console.log(layout);
+        for (let i=0; i<loop; i++) {
+            let newLayout = [];
+            for (let y = 0; y < layout.length; y++) {
+                let row = [];
+                for (let x = 0; x < layout[y].length; x++) {
+                    let count = 0;
+                    for (let y1 = -1; y1 <= 1; y1++) {
+                        for (let x1 = -1; x1 <= 1; x1++) {
+                            if (y + y1 < 0 || y + y1 >= layout.length || x + x1 < 0 || x + x1 >= layout[y].length) {
+                                count+=2;
+                                continue;
+                            }
+                            if (layout[y + y1][x + x1] === 1) {
+                                count++;
+                            }
+                        }
+                    }
+
+                    let countNearby = 0;
+                    let distance = 2;
+                    for (let y1 = -distance; y1 <= distance; y1++) {
+                        for (let x1 = -distance; x1 <= distance; x1++) {
+                            if (y + y1 < 0 || y + y1 >= layout.length || x + x1 < 0 || x + x1 >= layout[y].length) {
+                                continue;
+                            }
+                            if(Math.abs(x1 - x) == 2 && Math.abs(y1 - y) == distance) {
+                                continue;
+                            }
+                            if (layout[y + y1][x + x1] === 1) {
+                                countNearby++;
+                            }
+                        }
+                    }
+
+                    if ((layout[y][x] === 1 && count > 5) || (layout[y][x] === 0 && count >= 5) || (layout[y][x] === 0 && countNearby <= 3)) {
+                        row.push(1);
+                    } else {
+                        row.push(0);
+                    }
+                }
+                newLayout.push(row);
+            }
+
+            console.log("newLayout");
+            console.log(newLayout);
+            layout = newLayout;
+        }
+
+        return layout;
 
         // Dig holes in the layout
         let tilesToRemove = ((width*height) * .5) - width*2 - height*2;

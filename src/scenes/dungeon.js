@@ -43,6 +43,8 @@ export class DungeonScene extends Phaser.Scene {
     }
 
     create() {
+        
+
         this.#createMap();
         this.#createStateMachine();
 
@@ -51,7 +53,7 @@ export class DungeonScene extends Phaser.Scene {
         this.#entities = [];
 
         let details = Data.getUnitDetails(this, 'fighter');
-        this.#player = new Unit(this, UNIT_TYPES.PLAYER, 10, 5, details);
+        this.#player = new Unit(this, UNIT_TYPES.PLAYER, 3, 5, details);
 
         details = Data.getUnitDetails(this, 'skeleton');
 
