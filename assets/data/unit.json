@@ -1,0 +1,18 @@
+[
+    {
+        "id": "fighter",
+        "name": "Fighter",
+        "hp": 10,
+        "attack": 1,
+        "assetDeadFrame": 16,
+        "assetBaseFrame": 240
+    },
+    {
+        "id": "skeleton",
+        "name": "Skeleton",
+        "hp": 10,
+        "attack": 1,
+        "assetDeadFrame": 203,
+        "assetBaseFrame": 528
+    }
+]
