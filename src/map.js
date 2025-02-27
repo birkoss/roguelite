@@ -101,6 +101,18 @@ export class Map {
         return this._tilemap.getTileAtWorldXY(worldX, worldY, false, this._scene.cameras.main, this._layerBackground);
     }
 
+    getEmptyTiles() {
+        let tiles = [];
+        for (let y = 0; y < this._layout.length; y++) {
+            for (let x = 0; x < this._layout[y].length; x++) {
+                if (this._layout[y][x] === 0) {
+                    tiles.push({ x, y });
+                }
+            }
+        }
+        return tiles;
+    }
+
     /**
      * @param {number} x
      * @param {number} y

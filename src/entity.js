@@ -12,8 +12,6 @@ export class Entity {
     _x;
     /** @protected @type {number} */
     _y;
-    /** @protected @type {UnitDetails} */
-    _details;
     /** @protected @type {Phaser.Scene} */
     _scene;
     /** @protected @type {keyof typeof ENTITY_TYPE} */
@@ -26,13 +24,12 @@ export class Entity {
      * @param {keyof typeof ENTITY_TYPE} type
      * @param {number} x
      * @param {number} y
-     * @param {UnitDetails} details */
-    constructor(scene, type, x, y, details) {
+     */
+    constructor(scene, type, x, y) {
         this._type = type;
         this._scene = scene;
         this._x = x;
         this._y = y;
-        this._details = details;
 
         this._phaserGameObject = this._scene.add.sprite((x * 36) + 18, (y * 36) + 18, DUNGEON_ASSET_KEYS.DUNGEON, 46);
     }

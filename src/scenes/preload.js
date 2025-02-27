@@ -28,6 +28,8 @@ export class PreloadScene extends Phaser.Scene {
             frameHeight: 36,
         });
 
+        this.load.image(UI_ASSET_KEYS.BLANK, 'assets/images/blank.png');
+
         this.load.json(
             DATA_ASSET_KEYS.UNIT,
             'assets/data/unit.json'

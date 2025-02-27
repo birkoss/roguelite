@@ -15,4 +15,5 @@ export const UI_ASSET_KEYS = Object.freeze({
     LARGE_FONT: 'UI_ASSET_KEYS.LARGE_FONT',           // Size: 12, 24, 36
     UNIT: 'UI_ASSET_KEYS.UNIT',                       // Size: 8
     ACTION: 'UI_ASSET_KEYS.ACTION',
+    BLANK: 'UI_ASSET_KEYS.BLANK',
 });

@@ -9,6 +9,7 @@ import { Map } from "../map.js";
 import { UI_ASSET_KEYS } from "../keys/asset.js";
 import { Action, ACTION_TYPE } from "../action.js";
 import { Entity, ENTITY_TYPE } from "../entity.js";
+import { Panel } from "../ui/panel.js";
 
 const MAIN_STATES = Object.freeze({
     PLAYER_WAIT_ACTION: 'PLAYER_WAIT_ACTION',                   // Wait for Player action
@@ -36,6 +37,12 @@ export class DungeonScene extends Phaser.Scene {
     /** @type {StateMachine} */
     #stateMachine;
 
+    /** @type {Panel} */
+    #panel;
+    #energy;
+    #hp;
+    #gold;
+
     #uiPaths;
 
     constructor() {
@@ -45,29 +52,42 @@ export class DungeonScene extends Phaser.Scene {
     }
 
     create() {
-        this.#createMap();
-
         this.#enemies = [];
         this.#actions = [];
         this.#entities = [];
         this.#uiPaths = [];
 
+        this.#gold = 0;
+        this.#hp = 10;
+        this.#energy = 100;
 
-        let details = Data.getUnitDetails(this, 'skeleton');
+        this.#createMap();
 
-        let enemy = new Unit(this, UNIT_TYPES.ENEMY, 3, 1, details);
-        this.#enemies.push(enemy);
+        let emptyTiles = this.#map.getEmptyTiles();
 
-        let stair = new Entity(this, ENTITY_TYPE.STAIR, 4, 4, details);
+        Phaser.Utils.Array.Shuffle(emptyTiles);
+        let tile = emptyTiles.shift();
+
+        let stair = new Entity(this, ENTITY_TYPE.STAIR, tile.x, tile.y);
         this.#entities.push(stair);
 
-        details = Data.getUnitDetails(this, 'fighter');
-        this.#player = new Unit(this, UNIT_TYPES.PLAYER, 1, 1, details);
+        for (let i=0; i<10; i++) {
+            Phaser.Utils.Array.Shuffle(emptyTiles);
+            tile = emptyTiles.shift();
+            
+            let enemy = new Unit(this, UNIT_TYPES.ENEMY, tile.x, tile.y, Data.getUnitDetails(this, 'skeleton'));
+            this.#enemies.push(enemy);
+        }
+
+        Phaser.Utils.Array.Shuffle(emptyTiles);
+        tile = emptyTiles.shift();
+
+        this.#player = new Unit(this, UNIT_TYPES.PLAYER, tile.x, tile.y, Data.getUnitDetails(this, 'fighter'));
 
 
         let camera = this.cameras.main; 
 
-        camera.setBounds(0, 0, this.#map.width * 36, this.#map.height * 36);
+        camera.setBounds(0, -124, this.#map.width * 36, this.#map.height * 36);
         camera.startFollow(this.#player.container, true); 
 
         this.input.on('pointermove', this.#onTileHighlighted, this);
@@ -91,6 +111,10 @@ export class DungeonScene extends Phaser.Scene {
             this.#actions = this.#getActions(tile)
             this.#stateMachine.setState(MAIN_STATES.PLAYER_EXECUTE_ACTION);
           }, this);
+
+          this.#panel = new Panel(this);
+          this.add.existing(this.#panel.container);
+          this.#panel.container.setScrollFactor(0);
 
           this.#createStateMachine();
     }
@@ -155,6 +179,9 @@ export class DungeonScene extends Phaser.Scene {
         this.#stateMachine.addState({
             name: MAIN_STATES.PLAYER_EXECUTE_ACTION,
             onEnter: () => {
+                this.#energy--;
+                this.#panel.updateEnergy(this.#energy);
+
                 if (this.#actions.length === 0) {
                     this.#stateMachine.setState(MAIN_STATES.ENEMY_TURN);
                 } else {
@@ -168,6 +195,9 @@ export class DungeonScene extends Phaser.Scene {
                         });
                     } else if (action.type === ACTION_TYPE.MELEE) {
                         this.#player.attackUnit(action.data, () => {
+                            this.#hp--;
+                            this.#panel.updateHp(this.#hp);
+
                             this.#player.move(action.data.x, action.data.y, () => {
                                 this.#stateMachine.setState(MAIN_STATES.CHECK_EVENT);
                             });
