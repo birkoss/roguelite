@@ -68,7 +68,7 @@ export class DungeonScene extends Phaser.Scene {
         Phaser.Utils.Array.Shuffle(emptyTiles);
         let tile = emptyTiles.shift();
 
-        let stair = new Entity(this, ENTITY_TYPE.STAIR, tile.x, tile.y);
+        let stair = new Entity(this, ENTITY_TYPE.STAIR, tile.x, tile.y, { frame: 46, shadow: false });
         this.#entities.push(stair);
 
         for (let i=0; i<10; i++) {
@@ -79,11 +79,26 @@ export class DungeonScene extends Phaser.Scene {
             this.#enemies.push(enemy);
         }
 
+        for (let i=0; i<10; i++) {
+            Phaser.Utils.Array.Shuffle(emptyTiles);
+            tile = emptyTiles.shift();
+            
+            let gold = new Entity(this, ENTITY_TYPE.GOLD, tile.x, tile.y, { frame: 228, value: 1, shadow: true });
+            this.#entities.push(gold);
+        }
+
+        for (let i=0; i<5; i++) {
+            Phaser.Utils.Array.Shuffle(emptyTiles);
+            tile = emptyTiles.shift();
+            
+            let food = new Entity(this, ENTITY_TYPE.FOOD, tile.x, tile.y, { frame: 200, value: 5, shadow: true });
+            this.#entities.push(food);
+        }
+
         Phaser.Utils.Array.Shuffle(emptyTiles);
         tile = emptyTiles.shift();
 
         this.#player = new Unit(this, UNIT_TYPES.PLAYER, tile.x, tile.y, Data.getUnitDetails(this, 'fighter'));
-
 
         let camera = this.cameras.main; 
 
@@ -208,6 +223,29 @@ export class DungeonScene extends Phaser.Scene {
                                 this.#player.idle();
                                 this.scene.restart();
                             });
+                            return;
+                        }
+                        if (action.data.type === ENTITY_TYPE.GOLD) {
+                            this.#player.move(action.data.x, action.data.y, () => {
+                                action.data.use();
+                                this.#gold += action.data._details.value;
+
+                                this.#entities = this.#entities.filter(singleEntity => singleEntity !== action.data);
+                                this.#panel.updateGold(this.#gold);
+                                this.#stateMachine.setState(MAIN_STATES.CHECK_EVENT);
+                            });
+                            return;
+                        }
+                        if (action.data.type === ENTITY_TYPE.FOOD) {
+                            this.#player.move(action.data.x, action.data.y, () => {
+                                action.data.use();
+                                this.#energy += action.data._details.value;
+
+                                this.#entities = this.#entities.filter(singleEntity => singleEntity !== action.data);
+                                this.#panel.updateEnergy(this.#energy);
+                                this.#stateMachine.setState(MAIN_STATES.CHECK_EVENT);
+                            });
+                            return;
                         }
                     } 
                 }
